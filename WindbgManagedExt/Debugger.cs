@@ -25,6 +25,7 @@ namespace ExtCS.Debugger
 
 		#endregion Fields
 
+		#region Constructor
 
 		public Debugger(IDebugClient debugClient)
 		{
@@ -38,6 +39,9 @@ namespace ExtCS.Debugger
 			_current = this;
 			_context = context;
 		}
+
+		#endregion
+
 
 		public static Debugger Current
 		{
@@ -156,14 +160,7 @@ namespace ExtCS.Debugger
 		/// <summary>IDebugAdvanced3</summary>
 		public IDebugAdvanced3 DebugAdvanced
 		{
-			get
-			{
-				if (_DebugAdvanced == null)
-				{
-					_DebugAdvanced = _DebugClient as IDebugAdvanced3;
-				}
-				return _DebugAdvanced;
-			}
+			get { return _DebugAdvanced ?? _DebugClient as IDebugAdvanced3; }
 		}
 
 		public string Execute(string command)
@@ -171,6 +168,7 @@ namespace ExtCS.Debugger
 			//create a new debug control and assign the new ouput handler
 			IntPtr outputCallbacks;
 			IntPtr PreviousCallbacks;
+
 			//IDebugClient executionClient;
 			//int hr = this.DebugClient.CreateClient(out executionClient);
 			//var newDebugger = new Debugger(executionClient);
