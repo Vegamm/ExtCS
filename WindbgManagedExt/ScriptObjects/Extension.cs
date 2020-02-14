@@ -13,7 +13,7 @@ namespace ExtCS.Debugger
        private OutputHandler outHandler = new OutputHandler();
        public Extension(string extensionName)
        {
-           debugger = Debugger.Current;
+           debugger = Debugger.GetCurrentDebugger();
            extensionHandle = debugger.GetExtensionHandle(extensionName);
        }
        public string Call(string commandname, params string[] args)

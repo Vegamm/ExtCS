@@ -13,15 +13,17 @@ namespace ExtCS.Debugger
 		#region Fields
 
 		const int S_OK = 0;
-		private static Debugger _current;
-		private static Dictionary<string, UInt64> _loadedExtensions = new Dictionary<string, ulong>(10);
-		public StringBuilder debugOutput = new StringBuilder(10);
-		public const int E_FAIL = unchecked((int)0x80004005);
-		public const int ERROR_INVALID_PARAMETER = unchecked((int)0x80070057);
-		private ScriptContext _context;
+		const int E_FAIL = unchecked((int)0x80004005);
+		const int ERROR_INVALID_PARAMETER = unchecked((int)0x80070057);
 
-		private bool firstCommand = false;
-		private DEBUG_OUTCTL OutCtl = DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.DML;
+		private static Debugger sCurrent;
+		private static OutputHandler sOutHandler;
+		private static Dictionary<string, UInt64> sLoadedExtensions = new Dictionary<string, ulong>(10);
+
+		StringBuilder mDebugOutput = new StringBuilder(10);
+
+		private bool mFirstCommand = false;
+		private DEBUG_OUTCTL mOutCtl = DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.DML;
 
 		#endregion Fields
 
@@ -29,139 +31,74 @@ namespace ExtCS.Debugger
 
 		public Debugger(IDebugClient debugClient)
 		{
-			_DebugClient = debugClient as IDebugClient5;
-			_current = this;
+			DebugClient = debugClient as IDebugClient5;
+			sCurrent = this;
 		}
 
 		public Debugger(IDebugClient debugClient, ScriptContext context)
 		{
-			_DebugClient = debugClient as IDebugClient5;
-			_current = this;
-			_context = context;
+			DebugClient = debugClient as IDebugClient5;
+			sCurrent = this;
+			this.Context = context;
 		}
 
 		#endregion
 
+		#region Static Methods
 
-		public static Debugger Current
+		public static Debugger GetCurrentDebugger()
 		{
-			get { return _current; }
+			return sCurrent;
 		}
-		public ScriptContext Context { get { return _context; } internal set { _context = value; } }
 
-		private IDebugClient5 _DebugClient;
+		#endregion
+
+		#region Properties
+
 		/// <summary>IDebugClient5</summary>
-		public IDebugClient5 DebugClient
-		{
-			get
-			{
-				return _DebugClient;
-			}
-		}
+		public IDebugClient5 DebugClient { get; internal set; }
 
-		private IDebugControl4 _DebugControl;
 		/// <summary>IDebugControl4</summary>
-		public IDebugControl4 DebugControl
-		{
-			get
-			{
-				if (_DebugControl == null)
-				{
-					_DebugControl = _DebugClient as IDebugControl4;
-				}
-				return _DebugControl;
-			}
-		}
-		private IDebugControl6 _DebugControl6;
+		public IDebugControl4 DebugControl { get; internal set; }
+
 		/// <summary>IDebugControl5</summary>
-		public IDebugControl6 DebugControl6
-		{
-			get
-			{
-				if (_DebugControl6 == null)
-				{
-					_DebugControl6 = _DebugClient as IDebugControl6;
-				}
-				return _DebugControl6;
-			}
-		}
+		public IDebugControl6 DebugControl6 { get; internal set; }
 
-		private IDebugDataSpaces4 _DebugDataSpaces;
 		/// <summary>IDebugDataSpaces4</summary>
-		public IDebugDataSpaces4 DebugDataSpaces
-		{
-			get
-			{
-				if (_DebugDataSpaces == null)
-				{
-					_DebugDataSpaces = _DebugClient as IDebugDataSpaces4;
-				}
-				return _DebugDataSpaces;
-			}
-		}
+		public IDebugDataSpaces4 DebugDataSpaces { get; internal set; }
 
-		private IDebugRegisters2 _DebugRegisters;
 		/// <summary>IDebugRegisters2</summary>
-		public IDebugRegisters2 DebugRegisters
-		{
-			get
-			{
-				if (_DebugRegisters == null)
-				{
-					_DebugRegisters = _DebugClient as IDebugRegisters2;
-				}
-				return _DebugRegisters;
-			}
-		}
+		public IDebugRegisters2 DebugRegisters { get; internal set; }
 
-		private IDebugSymbols3 _DebugSymbols;
 		/// <summary>IDebugSymbols3</summary>
-		public IDebugSymbols3 DebugSymbols
-		{
-			get
-			{
-				if (_DebugSymbols == null)
-				{
-					_DebugSymbols = _DebugClient as IDebugSymbols3;
-				}
-				return _DebugSymbols;
-			}
-		}
+		public IDebugSymbols3 DebugSymbols { get; internal set; }
 
-		private IDebugSymbols5 _DebugSymbols5;
 		/// <summary>IDebugSymbols5</summary>
-		public IDebugSymbols5 DebugSymbols5
-		{
-			get
-			{
-				if (_DebugSymbols5 == null)
-				{
-					_DebugSymbols5 = _DebugClient as IDebugSymbols5;
-				}
-				return _DebugSymbols5;
-			}
-		}
+		public IDebugSymbols5 DebugSymbols5 { get; internal set; }
 
-		private IDebugSystemObjects2 _DebugSystemObjects;
 		/// <summary>IDebugSystemObjects2</summary>
-		public IDebugSystemObjects2 DebugSystemObjects
+		public IDebugSystemObjects2 DebugSystemObjects { get; internal set; }
+
+		/// <summary>IDebugAdvanced3</summary>
+		public IDebugAdvanced3 DebugAdvanced { get; internal set; }
+
+		public ScriptContext Context { get; internal set; }
+
+		public bool IsFirstCommand
 		{
-			get
+			get { return mFirstCommand; }
+			set
 			{
-				if (_DebugSystemObjects == null)
-				{
-					_DebugSystemObjects = _DebugClient as IDebugSystemObjects2;
-				}
-				return _DebugSystemObjects;
+				mFirstCommand = value;
+				mOutCtl = (mFirstCommand == false) ? 
+					DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.NOT_LOGGED : 
+					DEBUG_OUTCTL.THIS_CLIENT;
 			}
 		}
 
-		private IDebugAdvanced3 _DebugAdvanced;
-		/// <summary>IDebugAdvanced3</summary>
-		public IDebugAdvanced3 DebugAdvanced
-		{
-			get { return _DebugAdvanced ?? _DebugClient as IDebugAdvanced3; }
-		}
+		#endregion
+
+		#region Public Methods
 
 		public string Execute(string command)
 		{
@@ -185,7 +122,7 @@ namespace ExtCS.Debugger
 			OutputDebugInfo("executing command {0} \n", command);
 			PreviousCallbacks = SavePreviousCallbacks();
 
-			int InstallationHRESULT = InitialiezOutputHandler();
+			int InstallationHRESULT = InitializeOutputHandler();
 
 			if (FAILED(InstallationHRESULT))
 			{
@@ -207,12 +144,12 @@ namespace ExtCS.Debugger
 			InstallationHRESULT = RevertCallBacks(PreviousCallbacks);
 
 			//getting the output from the buffer.
-			output = OutHandler.ToString();
+			output = sOutHandler.ToString();
 			OutputDebugInfo("command output:\n" + output);
-			OutHandler.stbOutPut.Length = 0;
+			sOutHandler.stbOutPut.Length = 0;
 
 			//releasing the COM object.
-			//Marshal.ReleaseComObject(outHandler);
+			//Marshal.ReleaseComObject(sOutHandler);
 			return output;
 		}
 
@@ -234,11 +171,6 @@ namespace ExtCS.Debugger
 		public static bool SUCCEEDED(int hr)
 		{
 			return (hr >= 0);
-		}
-
-		private void OutputVerboseLine(string p)
-		{
-			OutputHelper(p, DEBUG_OUTPUT.VERBOSE);
 		}
 
 		public void OutputDebugInfo(string format, params object[] args)
@@ -267,16 +199,6 @@ namespace ExtCS.Debugger
 		//    OutputHelper(output, DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
 		//}
 
-		private int OutputHelper(string formattedString, DEBUG_OUTPUT outputType)
-		{
-
-			//formattedString = EscapePercents(formattedString);
-			//debugOutput.Append(formattedString);
-
-			return DebugControl.ControlledOutput(DEBUG_OUTCTL.ALL_OTHER_CLIENTS|DEBUG_OUTCTL.DML,outputType, formattedString);
-			//return DebugControl.ControlledOutputWide(OutCtl, outputType, formattedString);
-		}
-
 		public string GetString(UInt64 address)
 		{
 			string strOut;
@@ -287,11 +209,11 @@ namespace ExtCS.Debugger
 			throw new Exception("unable to get the string from address " + address);
 		}
 
-		public string GetString(object objaddress)
+		public string GetString(object objAddress)
 		{
 			UInt64 address;
 			string strOut;
-			if (UInt64.TryParse(objaddress.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out address))
+			if (UInt64.TryParse(objAddress.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out address))
 			{
 				return GetString(address);
 			}
@@ -328,17 +250,6 @@ namespace ExtCS.Debugger
 		}
 
 		/// <summary>
-		/// Throws a new exception with the name of the parent function and value of the HR
-		/// </summary>
-		/// <param name="hr">Error # to include</param>
-		internal void ThrowExceptionHere(int hr)
-		{
-			StackTrace stackTrace = new StackTrace();
-			System.Diagnostics.StackFrame stackFrame = stackTrace.GetFrame(1);
-			throw new Exception(String.Format("Error in {0}: {1}", stackFrame.GetMethod().Name, hr));
-		}
-
-		/// <summary>
 		/// Reads a single pointer from the target.
 		/// NOTE: POINTER VALUE IS SIGN EXTENDED TO 64-BITS WHEN NECESSARY!
 		/// </summary>
@@ -366,39 +277,21 @@ namespace ExtCS.Debugger
 			return ReadPointer(address.ToString(), offset.ToString());
 		}
 
-		public UInt64 ReadPointer(string objaddress, string offset)
-		{
-			UInt64 address, off;
-
-			if (!UInt64.TryParse(objaddress, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out address))
-			{
-				throw new Exception("unable to convert address " + objaddress);
-			}
-
-			if (!UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out off))
-			{
-				throw new Exception("unable to convert address " + offset);
-			}
-
-			return ReadPointer(address + off);
-		}
-
-		public UInt64 ReadPointer(UInt64 objaddress, string offset)
+		public UInt64 ReadPointer(UInt64 objAddress, string offset)
 		{
 			UInt64 address, off;
 
 			if (!UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out off))
 			{
 				throw new Exception("unable to convert address " + offset);
-
 			}
 
-			return ReadPointer(objaddress + off);
+			return ReadPointer(objAddress + off);
 		}
 
-		public UInt64 ReadPointer(UInt64 objaddress, UInt64 offset)
+		public UInt64 ReadPointer(UInt64 objAddress, UInt64 offset)
 		{
-			return ReadPointer(objaddress + offset);
+			return ReadPointer(objAddress + offset);
 		}
 
 		/// <summary>
@@ -423,7 +316,7 @@ namespace ExtCS.Debugger
 		/// <returns>True if 64-bit, otherwise false</returns>
 		public bool IsPointer64Bit()
 		{
-			return (DebugControl.IsPointer64Bit() == S_OK) ? true : false;
+			return (DebugControl.IsPointer64Bit() == S_OK);
 		}
 
 		/// <summary>
@@ -516,32 +409,17 @@ namespace ExtCS.Debugger
 
 		public void InstallCustomHandler(OutputHandler currentHandler, out IntPtr PreviousCallbacks)
 		{
-
 			PreviousCallbacks = SavePreviousCallbacks();
 
 			IntPtr ThisIDebugOutputCallbacksPtr = Marshal.GetComInterfaceForObject(currentHandler, typeof(IDebugOutputCallbacks2));
 			int InstallationHRESULT = this.DebugClient.SetOutputCallbacks(ThisIDebugOutputCallbacksPtr);
-
-		}
-
-		private int InitialiezOutputHandler()
-		{
-			//creating new output hanlder to redirect output.
-			if (OutHandler == null)
-			{
-				OutHandler = new OutputHandler();
-			}
-
-			IntPtr ThisIDebugOutputCallbacksPtr = Marshal.GetComInterfaceForObject(OutHandler, typeof(IDebugOutputCallbacks2));
-			int InstallationHRESULT = this.DebugClient.SetOutputCallbacks(ThisIDebugOutputCallbacksPtr);
-			return InstallationHRESULT;
 		}
 
 		public bool Require(string extensionName)
 		{
 			extensionName = extensionName.ToLower().Trim();
 			
-			if (_loadedExtensions.ContainsKey(extensionName))
+			if (sLoadedExtensions.ContainsKey(extensionName))
 			{
 				return true;
 			}
@@ -553,7 +431,8 @@ namespace ExtCS.Debugger
 				OutputError("unable to load extension {0}", extensionName);
 				return false;
 			}
-			_loadedExtensions.Add(extensionName, handle);
+
+			sLoadedExtensions.Add(extensionName, handle);
 			OutputDebugInfo("loaded extension {0} \n", extensionName);
 			return true;
 		}
@@ -563,23 +442,6 @@ namespace ExtCS.Debugger
 			string formatted = String.Format(p, args);
 
 			OutputHelper(formatted, DEBUG_OUTPUT.ERROR);
-
-		}
-
-		internal UInt64 GetExtensionHandle(string extensionName)
-		{
-			extensionName = extensionName.Trim().ToLower();
-			if (_loadedExtensions.ContainsKey(extensionName))
-			{
-				return _loadedExtensions[extensionName];
-			}
-			else
-			{
-				Require(extensionName);
-				return _loadedExtensions[extensionName];
-			}
-
-
 		}
 
 		public int RevertCallBacks(IntPtr PreviousCallbacks)
@@ -590,6 +452,38 @@ namespace ExtCS.Debugger
 			var InstallationHRESULT = this.DebugClient.SetOutputCallbacks(PreviousCallbacks);
 
 			return InstallationHRESULT;
+		}
+
+		#endregion
+
+		#region Private Methods
+
+		private int InitializeOutputHandler()
+		{
+			//creating new output handler to redirect output.
+			if (sOutHandler == null)
+			{
+				sOutHandler = new OutputHandler();
+			}
+
+			IntPtr ThisIDebugOutputCallbacksPtr = Marshal.GetComInterfaceForObject(sOutHandler, typeof(IDebugOutputCallbacks2));
+			int InstallationHRESULT = this.DebugClient.SetOutputCallbacks(ThisIDebugOutputCallbacksPtr);
+			return InstallationHRESULT;
+		}
+
+		private int OutputHelper(string formattedString, DEBUG_OUTPUT outputType)
+		{
+
+			//formattedString = EscapePercents(formattedString);
+			//mDebugOutput.Append(formattedString);
+
+			return DebugControl.ControlledOutput(DEBUG_OUTCTL.ALL_OTHER_CLIENTS | DEBUG_OUTCTL.DML, outputType, formattedString);
+			//return DebugControl.ControlledOutputWide(mOutCtl, outputType, formattedString);
+		}
+
+		private void OutputVerboseLine(string p)
+		{
+			OutputHelper(p, DEBUG_OUTPUT.VERBOSE);
 		}
 
 		private IntPtr SavePreviousCallbacks()
@@ -603,37 +497,41 @@ namespace ExtCS.Debugger
 			return PreviousCallbacks;
 		}
 
-		public bool IsFirstCommand
+
+		#endregion
+
+		#region Internal Methods
+		internal UInt64 GetExtensionHandle(string extensionName)
 		{
-			get
+			extensionName = extensionName.Trim().ToLower();
+			if (sLoadedExtensions.ContainsKey(extensionName))
 			{
-				return firstCommand;
+				return sLoadedExtensions[extensionName];
 			}
-			set
+			else
 			{
-				firstCommand = value;
-				if (value == false)
-				{
-					OutCtl = DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.NOT_LOGGED;
-				}
-				else
-				{
-					OutCtl =
-							DEBUG_OUTCTL.THIS_CLIENT;
-				}
+				Require(extensionName);
+				return sLoadedExtensions[extensionName];
 			}
 		}
 
-
-
-
-		private static OutputHandler OutHandler;
-
-		//public OutputHandler OutHandler { get { return outHandler; } set { if(outHandler!=null) outHandler = value; } }
+		//public OutputHandler sOutHandler { get { return sOutHandler; } set { if(sOutHandler!=null) sOutHandler = value; } }
 
 		internal void OutputError(string p, string method, string args)
 		{
 			throw new NotImplementedException();
 		}
+
+		/// <summary>
+		/// Throws a new exception with the name of the parent function and value of the HR
+		/// </summary>
+		/// <param name="hr">Error # to include</param>
+		internal void ThrowExceptionHere(int hr)
+		{
+			StackTrace stackTrace = new StackTrace();
+			System.Diagnostics.StackFrame stackFrame = stackTrace.GetFrame(1);
+			throw new Exception(String.Format("Error in {0}: {1}", stackFrame.GetMethod().Name, hr));
+		}
+		#endregion 
 	}
 }

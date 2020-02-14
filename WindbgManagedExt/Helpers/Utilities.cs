@@ -21,7 +21,7 @@ namespace ExtCS.Debugger
 
         public static void LoadSOSorPSSCOR()
         {
-            var d=Debugger.Current;
+            var d=Debugger.GetCurrentDebugger();
             string clr = d.Execute("lmvm clr");
 
             Regex regex = new Regex(
@@ -94,7 +94,7 @@ namespace ExtCS.Debugger
         public static string GetMT(string type)
         {
 
-            var d = Debugger.Current;
+            var d = Debugger.GetCurrentDebugger();
             var sos = new Extension("sos.dll");
             string sMethodTable = sos.Call("!Name2EE "+type);
             var rgMt = new System.Text.RegularExpressions.Regex(@"MethodTable:\W(?<methodtable>\S*)", System.Text.RegularExpressions.RegexOptions.Multiline);

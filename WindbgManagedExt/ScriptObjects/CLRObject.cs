@@ -24,7 +24,7 @@ namespace ExtCS.Debugger
             this.IsValueType = isValueType;
             Name = typeName;
             _value = value;
-           // Debugger.Current.OutputDebugInfo("created CLRObject {2} of valuetype with name:{0} and value:{1}\n", typeName, value,Name); 
+           // Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject {2} of valuetype with name:{0} and value:{1}\n", typeName, value,Name); 
         }
         public Address Address { 
             get {
@@ -58,15 +58,15 @@ namespace ExtCS.Debugger
         {
             _isPointer = isPointer;
             _offset = offset;
-           // Debugger.Current.OutputDebugInfo("created CLRObject's {1} with offset:{0}\n",_offset,Name ); 
+           // Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject's {1} with offset:{0}\n",_offset,Name ); 
 
         }
         private void InitIfPointer()
         {
             if (_isPointer)
             {
-                Debugger.Current.OutputDebugInfo("Reading pointer of CLRObject's {2} with name: {1} and offset:{0}\n", _offset,Type,Name); 
-                _address = new Address(Debugger.Current.ReadPointer(_offset));
+                Debugger.GetCurrentDebugger().OutputDebugInfo("Reading pointer of CLRObject's {2} with name: {1} and offset:{0}\n", _offset,Type,Name); 
+                _address = new Address(Debugger.GetCurrentDebugger().ReadPointer(_offset));
                 _isPointer = false;
             }
 
@@ -74,12 +74,12 @@ namespace ExtCS.Debugger
         public CLRObject(Address address)
         {
             _address = address;
-            Debugger.Current.OutputDebugInfo("created CLRObject from address object ,address:{0}\n", address.ToHex()); 
+            Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject from address object ,address:{0}\n", address.ToHex()); 
         }
         public CLRObject(string address)
         {
             _address = new Address(address);
-            Debugger.Current.OutputDebugInfo("created CLRObject with address:{0}\n", address); 
+            Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject with address:{0}\n", address); 
         }
         public CLRObject(UInt64 address)
         {
@@ -100,7 +100,7 @@ namespace ExtCS.Debugger
 
                     if (IsValueType)
                     {
-                        Debugger.Current.OutputDebugInfo("Reading value of CLRObject of ValueType with Name:{2} and Type:{0} and Value {1}\n", Type, _value, Name);
+                        Debugger.GetCurrentDebugger().OutputDebugInfo("Reading value of CLRObject of ValueType with Name:{2} and Type:{0} and Value {1}\n", Type, _value, Name);
                         switch (Type)
                         {
                             case "System.Boolean":
@@ -121,16 +121,16 @@ namespace ExtCS.Debugger
                     }
 
                     InitIfPointer();
-                    Debugger.Current.OutputDebugInfo("Reading field {2} value of CLRObject with and Type:{0} and Value {1}\n", Type, _value, Name);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("Reading field {2} value of CLRObject with and Type:{0} and Value {1}\n", Type, _value, Name);
                     switch (Type)
                     {
 
                         case "System.String":
                             _value = _address.GetManagedString();
-                            Debugger.Current.OutputDebugInfo("Reading string value {0}\n",  _value);
+                            Debugger.GetCurrentDebugger().OutputDebugInfo("Reading string value {0}\n",  _value);
                             break;
                         default:
-                            Debugger.Current.OutputDebugInfo("Reading string value {0}\n", _value);
+                            Debugger.GetCurrentDebugger().OutputDebugInfo("Reading string value {0}\n", _value);
                             _value = this;
                             break;
                             
@@ -141,8 +141,8 @@ namespace ExtCS.Debugger
 
                 catch (Exception ex)
                 {
-                    Debugger.Current.OutputDebugInfo("Could not read field '{0}' of CLRObject with type:{1} and MT {2}",Name,Type,MT);
-                    Debugger.Current.OutputDebugInfo(ex.Message);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("Could not read field '{0}' of CLRObject with type:{1} and MT {2}",Name,Type,MT);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo(ex.Message);
                     EmitParentInfo();
                     throw ex;
                 }
@@ -208,7 +208,7 @@ namespace ExtCS.Debugger
                     {
                         throw new Exception(string.Format("value type {0} does not support field access", Name));
                     }
-                    Debugger.Current.OutputDebugInfo("Beginning to read field of CLRObject's {0} fieldname {1}\n",Name,fieldName);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("Beginning to read field of CLRObject's {0} fieldname {1}\n",Name,fieldName);
                     fieldName = fieldName.ToUpperInvariant();
                     if (_Fields != null && _Fields.ContainsKey(fieldName))
                     {
@@ -227,8 +227,8 @@ namespace ExtCS.Debugger
                 catch (Exception ex)
                 {
 
-                    Debugger.Current.OutputDebugInfo("Error:Could not find a field '{2}' for CLRObject with Name {0} and Type{1}\n", Name,Type,fieldName);
-                    Debugger.Current.OutputDebugInfo(ex.Message);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("Error:Could not find a field '{2}' for CLRObject with Name {0} and Type{1}\n", Name,Type,fieldName);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo(ex.Message);
                     throw ex;
                     
                 }
@@ -264,10 +264,10 @@ namespace ExtCS.Debugger
             if (_properties[2].Contains("EEClass:"))
                 EEclass = _properties[2].Substring(13);
 
-            Debugger.Current.OutputDebugInfo("Initializing fields of CLR Object Name:{0} and Type {1}\n", Name, Type);
+            Debugger.GetCurrentDebugger().OutputDebugInfo("Initializing fields of CLR Object Name:{0} and Type {1}\n", Name, Type);
             EmitParentInfo();
 
-            Debugger.Current.OutputDebugInfo("MT \t\t Type \t\t valueType \t\t Name\n");
+            Debugger.GetCurrentDebugger().OutputDebugInfo("MT \t\t Type \t\t valueType \t\t Name\n");
             for (int i = 7; i < _properties.Length; i++)
             {
                 var strCurrentLine = _properties[i];
@@ -307,7 +307,7 @@ namespace ExtCS.Debugger
                         else
                         {
                             string fieldAddress = new Address(_address.ToHex(), arrFields[2]).ToHex();
-                            //var pointer = Debugger.Current.ReadPointer(fieldAddress);
+                            //var pointer = Debugger.GetCurrentDebugger().ReadPointer(fieldAddress);
                             ObjCLR = new CLRObject(true, fieldAddress);
                             ObjCLR.Name = arrFields[arrFields.Length - 1];
                             ObjCLR.Parent = this;
@@ -317,7 +317,7 @@ namespace ExtCS.Debugger
 
 
                         }
-                        Debugger.Current.OutputDebugInfo("{0} \t\t {1} \t\t {2} \t\t {3} \n", ObjCLR.MT, ObjCLR.Type, ObjCLR.IsValueType, ObjCLR.Name);
+                        Debugger.GetCurrentDebugger().OutputDebugInfo("{0} \t\t {1} \t\t {2} \t\t {3} \n", ObjCLR.MT, ObjCLR.Type, ObjCLR.IsValueType, ObjCLR.Name);
                         _Fields.Add(arrFields[arrFields.Length-1].Trim().ToUpperInvariant(), ObjCLR);
                     }
                 }
@@ -330,10 +330,10 @@ namespace ExtCS.Debugger
 
             if (this.Parent != null)
             {
-                Debugger.Current.OutputDebugInfo("Parent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Name, this.Parent.Type, this.Parent.MT);
+                Debugger.GetCurrentDebugger().OutputDebugInfo("Parent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Name, this.Parent.Type, this.Parent.MT);
                 if (this.Parent.Parent != null)
                 {
-                    Debugger.Current.OutputDebugInfo("GrandParent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Parent.Name, this.Parent.Parent.Type, this.Parent.Parent.MT);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("GrandParent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Parent.Name, this.Parent.Parent.Type, this.Parent.Parent.MT);
                 }
             }
         }

@@ -120,7 +120,7 @@ namespace ExtCS.Debugger
                     if (!arguments.HasArgument("-help"))
                     {
                         ScriptContext context = new ScriptContext();
-                        Debugger.Current.Context = context;
+                        Debugger.GetCurrentDebugger().Context = context;
                         context.Debug = IsDebugMode;
                         if (arguments.HasArgument("-file"))
                         {
@@ -136,12 +136,12 @@ namespace ExtCS.Debugger
                             if (IsDebugMode)
                             {
                                 IsDebugMode = false;
-                                Debugger.Current.Output("Script debug mode is off\n");
+                                Debugger.GetCurrentDebugger().Output("Script debug mode is off\n");
                             }
                             else
                             {
                                 IsDebugMode = true;
-                                Debugger.Current.Output("Script debug mode is on\n");
+                                Debugger.GetCurrentDebugger().Output("Script debug mode is on\n");
                             }
                             return "";
                         }
@@ -149,7 +149,7 @@ namespace ExtCS.Debugger
                         {
                             Session = null;
                             DebuggerScriptEngine.Clear();
-                            Debugger.Current.Output("Script session cleared\n");
+                            Debugger.GetCurrentDebugger().Output("Script session cleared\n");
                             Output = string.Empty;
                             return "Session cleared";
                         }

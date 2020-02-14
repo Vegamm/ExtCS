@@ -105,7 +105,7 @@ namespace ExtCS.Debugger
         public uint GetInt32Value()
         {
             uint output;
-            if(!SUCCEEDED(Debugger.Current.ReadVirtual32(_address,out output)))
+            if(!SUCCEEDED(Debugger.GetCurrentDebugger().ReadVirtual32(_address,out output)))
                 throw new Exception("unable to get the int32 from address " + _address);
 
             return output;
@@ -114,7 +114,7 @@ namespace ExtCS.Debugger
         public Int16 GetInt16Value()
         {
             Int16 output;
-            if (!SUCCEEDED(Debugger.Current.ReadVirtual16(_address, out output)))
+            if (!SUCCEEDED(Debugger.GetCurrentDebugger().ReadVirtual16(_address, out output)))
                 throw new Exception("unable to get the int16 from address " + _address);
 
             return output;
@@ -123,7 +123,7 @@ namespace ExtCS.Debugger
         public Byte GetByte()
         {
             Byte output;
-            if (!SUCCEEDED(Debugger.Current.ReadVirtual8(_address, out output)))
+            if (!SUCCEEDED(Debugger.GetCurrentDebugger().ReadVirtual8(_address, out output)))
                 throw new Exception("unable to get the byte from address " + _address);
 
             return output;
@@ -131,13 +131,13 @@ namespace ExtCS.Debugger
 
         private int GetString(UInt64 address, UInt32 maxSize, out string output)
         {
-            return Debugger.Current.GetUnicodeString(address, maxSize, out output);
+            return Debugger.GetCurrentDebugger().GetUnicodeString(address, maxSize, out output);
         }
 
         public string GetManagedString()
         {
             string strOut;
-            ulong offset=Debugger.Current.IsPointer64Bit() ? 12UL:8UL;
+            ulong offset=Debugger.GetCurrentDebugger().IsPointer64Bit() ? 12UL:8UL;
             if (SUCCEEDED(GetString(_address+offset, 2000, out strOut)))
             {
                 return strOut;

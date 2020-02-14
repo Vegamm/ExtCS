@@ -71,38 +71,38 @@ namespace ExtCS.Debugger
 
                 if (result.Success)
                 {
-                    Debugger.Current.OutputDebugInfo("Compilation was successful.");
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("Compilation was successful.");
                     exeBytes = exeStream.ToArray();
                     pdbBytes = pdbStream.ToArray();
                 }
                 else
                 {
                     var errors = String.Join(Environment.NewLine, result.Diagnostics.Select(x => x.ToString()));
-                    Debugger.Current.OutputDebugInfo("Error occurred when compiling: {0})", errors);
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("Error occurred when compiling: {0})", errors);
                 }
             }
 
             if (compileSuccess)
             {
-                Debugger.Current.OutputDebugInfo("Loading assembly into appdomain.");
+                Debugger.GetCurrentDebugger().OutputDebugInfo("Loading assembly into appdomain.");
                // if(debuggerDomain==null)
                  //   debuggerDomain = AppDomain.CreateDomain("debuggerdomain");
 
                 var assembly = AppDomain.CurrentDomain.Load(exeBytes, pdbBytes);
-                Debugger.Current.OutputDebugInfo("Retrieving compiled script class (reflection).");
+                Debugger.GetCurrentDebugger().OutputDebugInfo("Retrieving compiled script class (reflection).");
                 var type = assembly.GetType(CompiledScriptClass);
-                Debugger.Current.OutputDebugInfo("Retrieving compiled script method (reflection).");
+                Debugger.GetCurrentDebugger().OutputDebugInfo("Retrieving compiled script method (reflection).");
                 var method = type.GetMethod(CompiledScriptMethod, BindingFlags.Static | BindingFlags.Public);
 
                 try
                 {
-                    Debugger.Current.OutputDebugInfo("Invoking method.");
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("Invoking method.");
                      retrunValue = method.Invoke(null, new[] { session });
                 }
                 catch (Exception executeException)
                 {
                     
-                    Debugger.Current.OutputDebugInfo("An error occurred when executing the scripts.");
+                    Debugger.GetCurrentDebugger().OutputDebugInfo("An error occurred when executing the scripts.");
                     var message =
                         string.Format(
                         "Exception Message: {0} {1}Stack Trace:{2}",
