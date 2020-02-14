@@ -4,7 +4,6 @@
 #include <msclr\auto_gcroot.h>
 
 
-
 using namespace ExtCS::Debugger;
 using namespace System;
 using namespace System::Runtime::InteropServices; // Marshal
@@ -86,8 +85,8 @@ HRESULT help(IDebugClient* debugClient, PCSTR args)
 	{
 		char result[100];   // array to hold the result.
 
-		strcpy(result,sHelp); // copy string one into the result.
-		strcat(result,args); // append string two to the result.	
+		strcpy_s(result,sHelp); // copy string one into the result.
+		strcat_s(result,args); // append string two to the result.	
 		helpargs=result;
 	}
 	else

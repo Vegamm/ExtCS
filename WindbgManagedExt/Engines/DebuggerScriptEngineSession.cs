@@ -1,15 +1,6 @@
-﻿using Roslyn.Compilers.Common;
-using Roslyn.Scripting;
+﻿using Roslyn.Scripting;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Roslyn.Compilers;
-using Roslyn.Scripting.CSharp;
-using Roslyn.Compilers;
-using Roslyn.Compilers.Common;
-using Roslyn.Compilers.CSharp;
 using System.IO;
 using System.Reflection;
 
@@ -22,6 +13,7 @@ namespace ExtCS.Debugger
         //'Roslyn.Scripting.CommonScriptEngine.CreateCompilation(Roslyn.Compilers.IText, string, bool, Roslyn.Scripting.Session, 
         //System.Type, Roslyn.Compilers.DiagnosticBag)'	C:\tfssourcecode\ExtCS\ExtCS\WindbgManagedExt\DebuggerScriptEngineSession.cs
         //10	18	WindbgManagedExt
+
         private const string CompiledScriptClass = "Submission#0";
         private const string CompiledScriptMethod = "<Factory>";
         private static AppDomain debuggerDomain;
@@ -34,10 +26,8 @@ namespace ExtCS.Debugger
                 {
                     AppDomain.Unload(debuggerDomain);
                     debuggerDomain = null;
-                }                
-
+                }
             }
-            
         }
 
         public static Object Execute(Session  session, string path)
@@ -101,8 +91,7 @@ namespace ExtCS.Debugger
                 }
                 catch (Exception executeException)
                 {
-                    
-                    Debugger.GetCurrentDebugger().OutputDebugInfo("An error occurred when executing the scripts.");
+	                Debugger.GetCurrentDebugger().OutputDebugInfo("An error occurred when executing the scripts.");
                     var message =
                         string.Format(
                         "Exception Message: {0} {1}Stack Trace:{2}",
@@ -116,8 +105,6 @@ namespace ExtCS.Debugger
             }
 
             return retrunValue ;
-
         }
-
     }
 }

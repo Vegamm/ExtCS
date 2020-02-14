@@ -12,7 +12,7 @@ namespace ExtCS.Debugger
 		//why public... -mv
 		public StringBuilder mStbOutput = new StringBuilder();
 
-		private bool mReEnter = false;
+		//private bool mReEnter = false;
 
 		private readonly DEBUG_OUTCBI INTEREST_MASK = DEBUG_OUTCBI.ANY_FORMAT | DEBUG_OUTCBI.EXPLICIT_FLUSH;
 

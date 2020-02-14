@@ -18,11 +18,11 @@ namespace ExtCS.Debugger
 		private static ManagedExtCS mManagedExtensionHost;
 
 		// should these be private? -mv
-		bool IsSessionPersisted = false;
+		//bool IsSessionPersisted = false;
 		static bool mIsScript = false;
 		static bool mIsDebugMode = false;
 		static string mCSScript;
-		static string mHistory;
+		//static string mHistory;
 		static string mParsedPath = null;
 
 		#endregion
@@ -47,7 +47,8 @@ namespace ExtCS.Debugger
 
 		public static ManagedExtCS GetInstance()
 		{
-			return mManagedExtensionHost ?? new ManagedExtCS();
+			mManagedExtensionHost = mManagedExtensionHost ?? new ManagedExtCS();
+			return mManagedExtensionHost;
 		}
 
 		#endregion

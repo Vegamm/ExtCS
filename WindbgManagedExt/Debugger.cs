@@ -212,7 +212,6 @@ namespace ExtCS.Debugger
 		public string GetString(object objAddress)
 		{
 			UInt64 address;
-			string strOut;
 			if (UInt64.TryParse(objAddress.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out address))
 			{
 				return GetString(address);
@@ -296,8 +295,7 @@ namespace ExtCS.Debugger
 
 		public UInt64 ReadPointer(UInt64 objAddress, string offset)
 		{
-			UInt64 address, off;
-
+			UInt64 off;
 			if (!UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out off))
 			{
 				throw new Exception("unable to convert address " + offset);

@@ -9,9 +9,9 @@ using System.Xml.XPath;
 
 namespace ExtCS.Debugger.ListCommandHelper
 {
-    public class XmlDataHelper:DataHelper
+    public class XmlDataHelper : DataHelper
     {
-        string _path;
+        string _path = null;
         public XmlDocument  _xmlDoc;
         
         public override bool SaveData(ICommand command)
@@ -47,20 +47,16 @@ namespace ExtCS.Debugger.ListCommandHelper
 
                     _xmlDoc.Save(_path);
                     return true;
-
                 }
+
                 return true;
 
             }
             catch (Exception)
             {
-
-                throw;
+	            throw;
             }
-            
-
         }
-
 
         public override IList<ICommand> GetRecentCommands()
         {
@@ -72,7 +68,7 @@ namespace ExtCS.Debugger.ListCommandHelper
             throw new NotImplementedException();
         }
 
-        public override IList<ICommand> GetScriptsFromContainer(string containername)
+        public override IList<ICommand> GetScriptsFromContainer(string containerName)
         {
             throw new NotImplementedException();
         }

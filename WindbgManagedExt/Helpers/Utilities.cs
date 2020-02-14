@@ -177,7 +177,7 @@ namespace ExtCS.Debugger
                 columnCount++;
 
             }
-            int rowCount = 0;
+
             List<string> lstRows = new List<string>();
             columnCount = 0;
             //lstRows will hold the format string for each rows
