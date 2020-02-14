@@ -15,7 +15,6 @@ namespace ExtCS.Debugger.Test
             
             Debugger debug = new Debugger(mockClient.Object);
 
-            
         }
     }
 }

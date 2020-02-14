@@ -45,7 +45,7 @@ EXPORT void CALLBACK DebugExtensionUninitialize()
 	DbgPrintf(L"EXTCS: DebugExtensionUninitialize\n");
 
 }
-//printing to the deugger
+//printing to the debugger
 //not used but it is defined anyway.
 void DbgPrintf(const wchar_t* format, ...)
 {

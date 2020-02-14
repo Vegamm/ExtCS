@@ -146,7 +146,7 @@ namespace ExtCS.Debugger
 			//getting the output from the buffer.
 			output = sOutHandler.ToString();
 			OutputDebugInfo("command output:\n" + output);
-			sOutHandler.stbOutPut.Length = 0;
+			sOutHandler.mStbOutput.Length = 0;
 
 			//releasing the COM object.
 			//Marshal.ReleaseComObject(sOutHandler);
