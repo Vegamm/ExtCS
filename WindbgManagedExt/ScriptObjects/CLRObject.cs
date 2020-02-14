@@ -8,336 +8,368 @@ using System.Threading.Tasks;
 namespace ExtCS.Debugger
 {
 
-    public class CLRObject
-    {
-        private Address _address;
-        private Dictionary<string, CLRObject> _Fields;
-        //private static Regex expression = new Regex(".*", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.CultureInvariant);
-        private string _dumpObjOutput;
-        private string[] _properties;
-        private static Extension _sos;
-        private bool _isPointer;
-        private string _offset;
-        public bool _hasValue;
-        public CLRObject(bool isValueType, string typeName, object value)
-        {
-            this.IsValueType = isValueType;
-            Name = typeName;
-            _value = value;
-           // Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject {2} of valuetype with name:{0} and value:{1}\n", typeName, value,Name); 
-        }
-        public Address Address { 
-            get {
-                InitIfPointer();
-            return _address; 
-        }
-        }
+	public class CLRObject
+	{
 
-        public bool HasValue
-        {
-            get 
-            {
-                if (IsValueType)
-                {
-                    return true;
-                }
+		#region Fields
 
-                InitIfPointer();
-                return _address.HasValue;
+		private static Extension mSOSExtension;
 
-            }
-        }
-        /// <summary>
-        /// This constuctor is used a s lazy initialization technique.
-        /// we will not be reading the original address unitl any request comes for any field access.
-        /// 
-        /// </summary>
-        /// <param name="isPointer"></param>
-        /// <param name="offset"></param>
-        public CLRObject(bool isPointer, string offset)
-        {
-            _isPointer = isPointer;
-            _offset = offset;
-           // Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject's {1} with offset:{0}\n",_offset,Name ); 
+		private Address mAddress;
+		private Dictionary<string, CLRObject> mFields;
 
-        }
-        private void InitIfPointer()
-        {
-            if (_isPointer)
-            {
-                Debugger.GetCurrentDebugger().OutputDebugInfo("Reading pointer of CLRObject's {2} with name: {1} and offset:{0}\n", _offset,Type,Name); 
-                _address = new Address(Debugger.GetCurrentDebugger().ReadPointer(_offset));
-                _isPointer = false;
-            }
+		//private static Regex expression = new Regex(".*", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.CultureInvariant);
 
-        }
-        public CLRObject(Address address)
-        {
-            _address = address;
-            Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject from address object ,address:{0}\n", address.ToHex()); 
-        }
-        public CLRObject(string address)
-        {
-            _address = new Address(address);
-            Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject with address:{0}\n", address); 
-        }
-        public CLRObject(UInt64 address)
-        {
-            _address = new Address(address);
-        }
-        public bool IsValueType
-        {
-            get;
-            private set;
-        }
-        public object Value
-        {
-            get
-            {
-                try
-                {
+		private string mOffset;
+		private string mDumpObjOutput;
+		private string[] mProperties;
 
+		private bool mIsPointer;
+		private bool mInitialized;
+		private object mValue;
 
-                    if (IsValueType)
-                    {
-                        Debugger.GetCurrentDebugger().OutputDebugInfo("Reading value of CLRObject of ValueType with Name:{2} and Type:{0} and Value {1}\n", Type, _value, Name);
-                        switch (Type)
-                        {
-                            case "System.Boolean":
-                                return (bool)_value;
-                            case "System.Int32":
-                                if (_value == null)
-                                {
-                                    _value = _address.GetInt32Value();
-                                }
+		//why is this public? -mv
+		public bool mHasValue;
 
-                                return _value;
-                            default:
-                                return _value;
+		#endregion
 
-                        }
+		#region Properties
 
+		public Address Address
+		{
+			get
+			{
+				InitIfPointer();
+				return mAddress;
+			}
+		}
 
-                    }
+		public CLRObject[] Children
+		{
+			get
+			{
+				if (mFields != null)
+				{
+					return mFields.Values.ToArray<CLRObject>();
+				}
+				else
+					return null;
+			}
+		}
 
-                    InitIfPointer();
-                    Debugger.GetCurrentDebugger().OutputDebugInfo("Reading field {2} value of CLRObject with and Type:{0} and Value {1}\n", Type, _value, Name);
-                    switch (Type)
-                    {
+		public string EEclass { get; private set; }
 
-                        case "System.String":
-                            _value = _address.GetManagedString();
-                            Debugger.GetCurrentDebugger().OutputDebugInfo("Reading string value {0}\n",  _value);
-                            break;
-                        default:
-                            Debugger.GetCurrentDebugger().OutputDebugInfo("Reading string value {0}\n", _value);
-                            _value = this;
-                            break;
-                            
-                    }
+		public string Field { get; private set; }
 
-                    return _value;
-                }
+		public bool IsValueType { get; private set; }
 
-                catch (Exception ex)
-                {
-                    Debugger.GetCurrentDebugger().OutputDebugInfo("Could not read field '{0}' of CLRObject with type:{1} and MT {2}",Name,Type,MT);
-                    Debugger.GetCurrentDebugger().OutputDebugInfo(ex.Message);
-                    EmitParentInfo();
-                    throw ex;
-                }
-            }
-        }
-        private void Init()
-        {
-            if (!_initilized)
-            {
-                if (_sos == null)
-                    _sos = new Extension("sos.dll");
+		public string MT { get; private set; }
 
-                InitIfPointer();
-                _dumpObjOutput = _sos.Call("!do", _address.ToHex());
-                _properties = _dumpObjOutput.Split('\n', '\r');
-                _initilized = true;
-                Name = string.Empty;
-            }
+		public string Name { get; private set; }
 
-        }
-        public string Name { get; private set; }
-        public string MT { get; private set; }
-        public string EEclass { get;private set; }
-        public string Field { get; private set; }
-        public string offset { get; private set; }
-        public string Type { get; private set; }
-        private bool _initilized=false;
-        public CLRObject Parent { get; private set; }
-        public CLRObject[] Children
-        {
-            get
-            {
-                if (_Fields != null)
-                {
-                   return _Fields.Values.ToArray<CLRObject>();
-                }
-                else
-                    return null;
+		public string Offset { get; private set; }
 
-            }
-        }
+		public CLRObject Parent { private set; get; }
 
-        public bool HasField(string field)
-        {
-            Init();
-            InitFields();
-            if (_Fields.ContainsKey(field.ToUpperInvariant()))
-            {
-                return true;
-            }
-            return false;
+		public string Type { get; private set; }
 
-        }
+		public bool HasValue
+		{
+			get
+			{
+				if (IsValueType)
+				{
+					return true;
+				}
 
-        public CLRObject this[string fieldName]
-        {
-            get
-            {
-                try
-                {
+				InitIfPointer();
+				return mAddress.HasValue;
 
-                    if (IsValueType)
-                    {
-                        throw new Exception(string.Format("value type {0} does not support field access", Name));
-                    }
-                    Debugger.GetCurrentDebugger().OutputDebugInfo("Beginning to read field of CLRObject's {0} fieldname {1}\n",Name,fieldName);
-                    fieldName = fieldName.ToUpperInvariant();
-                    if (_Fields != null && _Fields.ContainsKey(fieldName))
-                    {
-                            return _Fields[fieldName];                       
-                    }
-                    else
-                    {
-                        
-                        Init();
-                        InitFields();
-                        return _Fields[fieldName];
-                    }
+			}
+		}
 
+		public object Value
+		{
+			get
+			{
+				try
+				{
+					if (IsValueType)
+					{
+						Debugger.GetCurrentDebugger().OutputDebugInfo("Reading value of CLRObject of ValueType with Name:{2} and Type:{0} and Value {1}\n", Type, mValue, Name);
+						switch (Type)
+						{
+							case "System.Boolean":
+								return (bool)mValue;
+							case "System.Int32":
+								if (mValue == null)
+								{
+									mValue = mAddress.GetInt32Value();
+								}
+								return mValue;
+							default:
+								return mValue;
+						}
+					}
 
-                }
-                catch (Exception ex)
-                {
+					InitIfPointer();
+					Debugger.GetCurrentDebugger().OutputDebugInfo("Reading field {2} value of CLRObject with and Type:{0} and Value {1}\n", Type, mValue, Name);
+					switch (Type)
+					{
+						case "System.String":
+							mValue = mAddress.GetManagedString();
+							Debugger.GetCurrentDebugger().OutputDebugInfo("Reading string value {0}\n", mValue);
+							break;
+						default:
+							Debugger.GetCurrentDebugger().OutputDebugInfo("Reading string value {0}\n", mValue);
+							mValue = this;
+							break;
+					}
 
-                    Debugger.GetCurrentDebugger().OutputDebugInfo("Error:Could not find a field '{2}' for CLRObject with Name {0} and Type{1}\n", Name,Type,fieldName);
-                    Debugger.GetCurrentDebugger().OutputDebugInfo(ex.Message);
-                    throw ex;
-                    
-                }
+					return mValue;
+				}
 
-            }
-        }
+				catch (Exception ex)
+				{
+					Debugger.GetCurrentDebugger().OutputDebugInfo("Could not read field '{0}' of CLRObject with type:{1} and MT {2}", Name, Type, MT);
+					Debugger.GetCurrentDebugger().OutputDebugInfo(ex.Message);
+					EmitParentInfo();
+					throw ex;
+				}
+			}
+		}
 
-        private void InitFields()
-        {
-            
+		#endregion
 
-            if (_Fields!=null)
-            {
-                return;
-            }
+		#region Constructors
 
-            
+		public CLRObject(bool isValueType, string typeName, object value)
+		{
+			this.IsValueType = isValueType;
+			Name = typeName;
+			mValue = value;
+			mInitialized = false;
+			// Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject {2} of valuetype with name:{0} and value:{1}\n", typeName, value,Name); 
+		}
 
-            _Fields = new Dictionary<string, CLRObject>(_properties.Length);
+		/// <summary>
+		/// This constuctor is used a s lazy initialization technique.
+		/// we will not be reading the original address unitl any request comes for any field access.
+		/// 
+		/// </summary>
+		/// <param name="isPointer"></param>
+		/// <param name="offset"></param>
+		public CLRObject(bool isPointer, string offset)
+		{
+			mIsPointer = isPointer;
+			mOffset = offset;
+			mInitialized = false;
+			// Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject's {1} with offset:{0}\n",mOffset,Name ); 
+		}
 
-            //chose to do string split instead of regular expressions.
-            //this may be faster than regular expressions
-            //regular expression has lot of edge cases when i comes to matching geneic's notation
-            //containing special charcters
-            
+		public CLRObject(Address address)
+		{
+			mAddress = address;
+			mInitialized = false;
+			Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject from address object ,address:{0}\n", address.ToHex());
+		}
 
-            //name can be populated from the feild property.so this is not necessary
-            if (string.IsNullOrEmpty(Name)&&_properties[0].Contains("Name:"))
-                Name = _properties[0].Substring(13);
-            //getting the method table from the substring.
-            if (string.IsNullOrEmpty(this.MT)&&_properties[1].Contains("MethodTable:"))
-                MT = _properties[1].Substring(13);
-            if (_properties[2].Contains("EEClass:"))
-                EEclass = _properties[2].Substring(13);
+		public CLRObject(string address)
+		{
+			mAddress = new Address(address);
+			mInitialized = false;
+			Debugger.GetCurrentDebugger().OutputDebugInfo("created CLRObject with address:{0}\n", address);
+		}
 
-            Debugger.GetCurrentDebugger().OutputDebugInfo("Initializing fields of CLR Object Name:{0} and Type {1}\n", Name, Type);
-            EmitParentInfo();
+		public CLRObject(UInt64 address)
+		{
+			mAddress = new Address(address);
+			mInitialized = false;
+		}
 
-            Debugger.GetCurrentDebugger().OutputDebugInfo("MT \t\t Type \t\t valueType \t\t Name\n");
-            for (int i = 7; i < _properties.Length; i++)
-            {
-                var strCurrentLine = _properties[i];
-                //only if the filed contains instance,try to parse it.
-                //we are skipping shared and static variable instances.
-                if (strCurrentLine.Contains("instance"))
-                {
-                    string[] arrFields = strCurrentLine.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    //saw that some times the type field is empty string
-                    //we are skipping that field as well b taking more thn or equal to 8 strings.
-                    //0-MT
-                    //1-Field
-                    //2-offset
-                    //3-Type
-                    //4-VT
-                    //5-Attr
-                    //6-Value
-                    //7 =>Name
-                    if (arrFields.Length >= 8)
-                    {
-                       
-                        CLRObject ObjCLR;
-                        //indexing from back to avoid problems when the type contains spaces.
-                        //if type contains spaces,it will cause length to be changed
-                        if (arrFields[arrFields.Length - 4].Trim() == "1")
-                        {
-                            
-                            //instantiaing value type.
-                            //no need to check for address and values.
-                            ObjCLR = new CLRObject(true, arrFields[3].Trim(), arrFields[arrFields.Length - 2].Trim());
-                            ObjCLR.Name = arrFields[arrFields.Length-1];
-                            ObjCLR.Parent = this;
-                            ObjCLR.MT = arrFields[0].Trim();
-                            ObjCLR.Type = arrFields[3].Trim();
-                           
-                        }
-                        else
-                        {
-                            string fieldAddress = new Address(_address.ToHex(), arrFields[2]).ToHex();
-                            //var pointer = Debugger.GetCurrentDebugger().ReadPointer(fieldAddress);
-                            ObjCLR = new CLRObject(true, fieldAddress);
-                            ObjCLR.Name = arrFields[arrFields.Length - 1];
-                            ObjCLR.Parent = this;
-                            //ObjCLR.MT = arrFields[0];
-                            ObjCLR.MT = arrFields[0].Trim();
-                            ObjCLR.Type = arrFields[3].Trim();
+		#endregion
+
+		#region Private Methods
+
+		private void Init()
+		{
+			if (!mInitialized)
+			{
+				if (mSOSExtension == null)
+					mSOSExtension = new Extension("sos.dll");
+
+				InitIfPointer();
+				mDumpObjOutput = mSOSExtension.Call("!do", mAddress.ToHex());
+				mProperties = mDumpObjOutput.Split('\n', '\r');
+				mInitialized = true;
+				Name = string.Empty;
+			}
+		}
+
+		private void InitIfPointer()
+		{
+			if (mIsPointer)
+			{
+				Debugger.GetCurrentDebugger().OutputDebugInfo("Reading pointer of CLRObject's {2} with name: {1} and offset:{0}\n", mOffset, Type, Name);
+				mAddress = new Address(Debugger.GetCurrentDebugger().ReadPointer(mOffset));
+				mIsPointer = false;
+			}
+		}
+
+		private void InitFields()
+		{
+
+			if (mFields != null)
+			{
+				return;
+			}
+
+			mFields = new Dictionary<string, CLRObject>(mProperties.Length);
+
+			//chose to do string split instead of regular expressions.
+			//this may be faster than regular expressions
+			//regular expression has lot of edge cases when i comes to matching geneic's notation
+			//containing special charcters
 
 
-                        }
-                        Debugger.GetCurrentDebugger().OutputDebugInfo("{0} \t\t {1} \t\t {2} \t\t {3} \n", ObjCLR.MT, ObjCLR.Type, ObjCLR.IsValueType, ObjCLR.Name);
-                        _Fields.Add(arrFields[arrFields.Length-1].Trim().ToUpperInvariant(), ObjCLR);
-                    }
-                }
+			//name can be populated from the feild property.so this is not necessary
+			if (string.IsNullOrEmpty(Name) && mProperties[0].Contains("Name:"))
+				Name = mProperties[0].Substring(13);
+			//getting the method table from the substring.
+			if (string.IsNullOrEmpty(this.MT) && mProperties[1].Contains("MethodTable:"))
+				MT = mProperties[1].Substring(13);
+			if (mProperties[2].Contains("EEClass:"))
+				EEclass = mProperties[2].Substring(13);
 
-            }
-        }
+			Debugger.GetCurrentDebugger().OutputDebugInfo("Initializing fields of CLR Object Name:{0} and Type {1}\n", Name, Type);
+			EmitParentInfo();
 
-        private void EmitParentInfo()
-        {
+			Debugger.GetCurrentDebugger().OutputDebugInfo("MT \t\t Type \t\t valueType \t\t Name\n");
+			for (int i = 7; i < mProperties.Length; i++)
+			{
+				var strCurrentLine = mProperties[i];
+				//only if the filed contains instance,try to parse it.
+				//we are skipping shared and static variable instances.
+				if (strCurrentLine.Contains("instance"))
+				{
+					string[] arrFields = strCurrentLine.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+					//saw that some times the type field is empty string
+					//we are skipping that field as well b taking more thn or equal to 8 strings.
+					//0-MT
+					//1-Field
+					//2-offset
+					//3-Type
+					//4-VT
+					//5-Attr
+					//6-Value
+					//7 =>Name
+					if (arrFields.Length >= 8)
+					{
 
-            if (this.Parent != null)
-            {
-                Debugger.GetCurrentDebugger().OutputDebugInfo("Parent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Name, this.Parent.Type, this.Parent.MT);
-                if (this.Parent.Parent != null)
-                {
-                    Debugger.GetCurrentDebugger().OutputDebugInfo("GrandParent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Parent.Name, this.Parent.Parent.Type, this.Parent.Parent.MT);
-                }
-            }
-        }
+						CLRObject ObjCLR;
+						//indexing from back to avoid problems when the type contains spaces.
+						//if type contains spaces,it will cause length to be changed
+						if (arrFields[arrFields.Length - 4].Trim() == "1")
+						{
 
-        public object _value { get; set; }
-    }
+							//instantiaing value type.
+							//no need to check for address and values.
+							ObjCLR = new CLRObject(true, arrFields[3].Trim(), arrFields[arrFields.Length - 2].Trim());
+							ObjCLR.Name = arrFields[arrFields.Length - 1];
+							ObjCLR.Parent = this;
+							ObjCLR.MT = arrFields[0].Trim();
+							ObjCLR.Type = arrFields[3].Trim();
+
+						}
+						else
+						{
+							string fieldAddress = new Address(mAddress.ToHex(), arrFields[2]).ToHex();
+							//var pointer = Debugger.GetCurrentDebugger().ReadPointer(fieldAddress);
+							ObjCLR = new CLRObject(true, fieldAddress);
+							ObjCLR.Name = arrFields[arrFields.Length - 1];
+							ObjCLR.Parent = this;
+							//ObjCLR.MT = arrFields[0];
+							ObjCLR.MT = arrFields[0].Trim();
+							ObjCLR.Type = arrFields[3].Trim();
+
+						}
+						Debugger.GetCurrentDebugger().OutputDebugInfo("{0} \t\t {1} \t\t {2} \t\t {3} \n", ObjCLR.MT, ObjCLR.Type, ObjCLR.IsValueType, ObjCLR.Name);
+						mFields.Add(arrFields[arrFields.Length - 1].Trim().ToUpperInvariant(), ObjCLR);
+					}
+				}
+
+			}
+		}
+
+		private void EmitParentInfo()
+		{
+
+			if (this.Parent != null)
+			{
+				Debugger.GetCurrentDebugger().OutputDebugInfo("Parent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Name, this.Parent.Type, this.Parent.MT);
+				if (this.Parent.Parent != null)
+				{
+					Debugger.GetCurrentDebugger().OutputDebugInfo("GrandParent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Parent.Name, this.Parent.Parent.Type, this.Parent.Parent.MT);
+				}
+			}
+		}
+
+		#endregion
+
+		#region Public Methods
+
+		public bool HasField(string field)
+		{
+			Init();
+			InitFields();
+			if (mFields.ContainsKey(field.ToUpperInvariant()))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		// what is this? Looks like a property. You should probably move this to a different region -mv
+		public CLRObject this[string fieldName]
+		{
+			get
+			{
+				try
+				{
+					if (IsValueType)
+					{
+						throw new Exception(string.Format("value type {0} does not support field access", Name));
+					}
+					Debugger.GetCurrentDebugger().OutputDebugInfo("Beginning to read field of CLRObject's {0} fieldname {1}\n", Name, fieldName);
+					fieldName = fieldName.ToUpperInvariant();
+					if (mFields != null && mFields.ContainsKey(fieldName))
+					{
+						return mFields[fieldName];
+					}
+					else
+					{
+
+						Init();
+						InitFields();
+						return mFields[fieldName];
+					}
+				}
+				catch (Exception ex)
+				{
+
+					Debugger.GetCurrentDebugger().OutputDebugInfo("Error:Could not find a field '{2}' for CLRObject with Name {0} and Type{1}\n", Name, Type, fieldName);
+					Debugger.GetCurrentDebugger().OutputDebugInfo(ex.Message);
+					throw ex;
+
+				}
+			}
+		}
+
+		#endregion
+
+
+
+
+	}
 }

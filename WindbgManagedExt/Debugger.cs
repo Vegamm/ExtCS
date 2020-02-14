@@ -20,14 +20,14 @@ namespace ExtCS.Debugger
 		private static OutputHandler sOutHandler;
 		private static Dictionary<string, UInt64> sLoadedExtensions = new Dictionary<string, ulong>(10);
 
-		StringBuilder mDebugOutput = new StringBuilder(10);
+		//StringBuilder mDebugOutput = new StringBuilder(10);
 
 		private bool mFirstCommand = false;
 		private DEBUG_OUTCTL mOutCtl = DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.DML;
 
 		#endregion Fields
 
-		#region Constructor
+		#region Constructors
 
 		public Debugger(IDebugClient debugClient)
 		{
@@ -104,7 +104,7 @@ namespace ExtCS.Debugger
 		{
 			//create a new debug control and assign the new ouput handler
 			IntPtr outputCallbacks;
-			IntPtr PreviousCallbacks;
+			IntPtr previousCallbacks;
 
 			//IDebugClient executionClient;
 			//int hr = this.DebugClient.CreateClient(out executionClient);
@@ -120,7 +120,7 @@ namespace ExtCS.Debugger
 
 			//save previous callbacks
 			OutputDebugInfo("executing command {0} \n", command);
-			PreviousCallbacks = SavePreviousCallbacks();
+			previousCallbacks = SavePreviousCallbacks();
 
 			int InstallationHRESULT = InitializeOutputHandler();
 
@@ -141,7 +141,7 @@ namespace ExtCS.Debugger
 			}
 
 			//revert previous callbacks
-			InstallationHRESULT = RevertCallBacks(PreviousCallbacks);
+			InstallationHRESULT = RevertCallBacks(previousCallbacks);
 
 			//getting the output from the buffer.
 			output = sOutHandler.ToString();
@@ -249,6 +249,16 @@ namespace ExtCS.Debugger
 			//return hr;
 		}
 
+		public UInt64 POI(object address)
+		{
+			return ReadPointer(address.ToString());
+		}
+
+		public UInt64 POI(object address, object offset)
+		{
+			return ReadPointer(address.ToString(), offset.ToString());
+		}
+
 		/// <summary>
 		/// Reads a single pointer from the target.
 		/// NOTE: POINTER VALUE IS SIGN EXTENDED TO 64-BITS WHEN NECESSARY!
@@ -267,14 +277,21 @@ namespace ExtCS.Debugger
 			throw new Exception("unable to convert address " + offset);
 		}
 
-		public UInt64 POI(object address)
+		public UInt64 ReadPointer(string objAddress, string offset)
 		{
-			return ReadPointer(address.ToString());
-		}
+			UInt64 address, off;
 
-		public UInt64 POI(object address, object offset)
-		{
-			return ReadPointer(address.ToString(), offset.ToString());
+			if (!UInt64.TryParse(objAddress, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out address))
+			{
+				throw new Exception($"unable to convert address {objAddress}");
+			}
+
+			if (!UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out off))
+			{
+				throw new Exception($"unable to convert address {offset}");
+			}
+
+			return ReadPointer(address + off);
 		}
 
 		public UInt64 ReadPointer(UInt64 objAddress, string offset)
@@ -407,9 +424,9 @@ namespace ExtCS.Debugger
 			return hr;
 		}
 
-		public void InstallCustomHandler(OutputHandler currentHandler, out IntPtr PreviousCallbacks)
+		public void InstallCustomHandler(OutputHandler currentHandler, out IntPtr previousCallbacks)
 		{
-			PreviousCallbacks = SavePreviousCallbacks();
+			previousCallbacks = SavePreviousCallbacks();
 
 			IntPtr ThisIDebugOutputCallbacksPtr = Marshal.GetComInterfaceForObject(currentHandler, typeof(IDebugOutputCallbacks2));
 			int InstallationHRESULT = this.DebugClient.SetOutputCallbacks(ThisIDebugOutputCallbacksPtr);
