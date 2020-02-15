@@ -42,8 +42,8 @@ EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG 
 EXPORT void CALLBACK DebugExtensionUninitialize()
 {
 	DbgPrintf(L"EXTCS: DebugExtensionUninitialize\n");
-
 }
+
 //printing to the debugger
 //not used but it is defined anyway.
 void DbgPrintf(const wchar_t* format, ...)
@@ -71,6 +71,7 @@ HRESULT CallManagedCode(char * script)
 	 return NULL;
 
 }
+
 //calling the MACRO to define execute method
 DECLARE_API(execute)
 //declaring the alias
@@ -101,6 +102,7 @@ HRESULT clearscriptsession(IDebugClient* debugClient, PCSTR args)
 	//passing a space after the -clear is important for the paramter regex  to parse the argument
 	return CallManagedCode(" -clear ");
 }
+
 HRESULT debug(IDebugClient* debugClient, PCSTR args)
 {
 	//passing a space after the -clear is important for the paramter regex  to parse the argument

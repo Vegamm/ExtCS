@@ -6,6 +6,9 @@ namespace ExtCS.Debugger
 {
 	public class OutputHandler : IDebugOutputCallbacks2, IDisposable
 	{
+
+		#region Fields
+
 		//this should probably be a centralize property (along the the fail/succeed methods) -mv
 		const int S_OK = 0;
 
@@ -15,6 +18,8 @@ namespace ExtCS.Debugger
 		//private bool mReEnter = false;
 
 		private readonly DEBUG_OUTCBI INTEREST_MASK = DEBUG_OUTCBI.ANY_FORMAT | DEBUG_OUTCBI.EXPLICIT_FLUSH;
+
+		#endregion
 
 		#region Public Methods
 
@@ -63,21 +68,6 @@ namespace ExtCS.Debugger
 			return S_OK;
 		}
 
-		int IDebugOutputCallbacks2.Output(DEBUG_OUTPUT Mask, string Text)
-		{
-			return Output(Mask, Text);
-		}
-
-		int IDebugOutputCallbacks2.GetInterestMask(out DEBUG_OUTCBI Mask)
-		{
-			return GetInterestMask(out Mask);
-		}
-
-		int IDebugOutputCallbacks2.Output2(DEBUG_OUTCB Which, DEBUG_OUTCBF Flags, ulong Arg, string Text)
-		{
-			return Output2(Which, Flags, Arg, Text);
-		}
-
 		int IDebugOutputCallbacks.Output(DEBUG_OUTPUT Mask, string Text)
 		{
 			return Output(Mask, Text);
@@ -100,6 +90,25 @@ namespace ExtCS.Debugger
 		private static bool SUCCEEDED(int hr)
 		{
 			return (hr >= 0);
+		}
+
+		#endregion
+
+		#region IDebugOutputCallbacks2
+
+		int IDebugOutputCallbacks2.Output(DEBUG_OUTPUT Mask, string Text)
+		{
+			return Output(Mask, Text);
+		}
+
+		int IDebugOutputCallbacks2.GetInterestMask(out DEBUG_OUTCBI Mask)
+		{
+			return GetInterestMask(out Mask);
+		}
+
+		int IDebugOutputCallbacks2.Output2(DEBUG_OUTCB Which, DEBUG_OUTCBF Flags, ulong Arg, string Text)
+		{
+			return Output2(Which, Flags, Arg, Text);
 		}
 
 		#endregion

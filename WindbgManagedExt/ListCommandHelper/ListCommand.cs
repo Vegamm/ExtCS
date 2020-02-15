@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ExtCS.Debugger.ListCommandHelper
 {
-    public class ListCommand:ICommand
+    public class ListCommand : ICommand
     {
         public IResult Execute(params string[] args)
         {

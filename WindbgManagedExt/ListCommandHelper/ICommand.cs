@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace ExtCS.Debugger.ListCommandHelper
+﻿namespace ExtCS.Debugger.ListCommandHelper
 {
     public interface ICommand
     {
