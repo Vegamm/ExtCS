@@ -20,7 +20,7 @@ namespace ExtCS.Debugger
 		private static OutputHandler sOutHandler;
 		private static Dictionary<string, UInt64> sLoadedExtensions = new Dictionary<string, ulong>(10);
 
-		//StringBuilder mDebugOutput = new StringBuilder(10);
+		StringBuilder mDebugOutput = new StringBuilder(10);
 
 		private bool mFirstCommand = false;
 		private DEBUG_OUTCTL mOutCtl = DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.DML;
@@ -102,7 +102,7 @@ namespace ExtCS.Debugger
 
 		public string Execute(string command)
 		{
-			//create a new debug control and assign the new ouput handler
+			//create a new debug control and assign the new output handler
 			IntPtr outputCallbacks;
 			IntPtr previousCallbacks;
 

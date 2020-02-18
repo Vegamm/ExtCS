@@ -12,7 +12,7 @@ namespace ExtCS
 		private string mArgs;
 		Dictionary<string, string> mArgsList;
 		Regex mRegex = new Regex(
-			@"(\s|^)(?<argName>\-\w+\s?)(?<argvalue>\s[^-]\S+)?",
+			@"(\s|^)(?<argname>\-\w+\s?)(?<argvalue>\s[^-]\S+)?",
 			RegexOptions.IgnoreCase
 			| RegexOptions.Multiline
 			| RegexOptions.Singleline
@@ -78,16 +78,20 @@ namespace ExtCS
 
 		#region Private Methods
 
+		//
 		private void IntArgs()
 		{
 			if (string.IsNullOrEmpty(mArgs))
 			{
 				return;
 			}
+
 			mArgsList = new Dictionary<string, string>();
 			foreach (Match item in mRegex.Matches(mArgs))
 			{
-				mArgsList.Add(item.Groups["argname"].Value.Trim().ToUpperInvariant(), item.Groups["argvalue"].Value);
+				string key = item.Groups["argname"].Value.Trim().ToUpperInvariant();
+				string value = item.Groups["argvalue"].Value.Trim();
+				mArgsList.Add(key, value);
 			}
 		}
 

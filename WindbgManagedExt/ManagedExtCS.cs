@@ -80,7 +80,7 @@ namespace ExtCS.Debugger
 			{
 				ArgumentsHelper arguments = new ArgumentsHelper(args);
 
-				if (!arguments.HasArgument("-help"))
+				if (arguments.HasArgument("-help") == false)
 				{
 					ScriptContext context = new ScriptContext();
 					Debugger.GetCurrentDebugger().Context = context;

@@ -50,6 +50,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -77,20 +78,20 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Program Files\Debugging Tools for Windows %28x64%29\sdk\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\Debugging Tools for Windows %28x64%29\sdk\lib\amd64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Repository\ExtCS\sdk\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Repository\ExtCS\sdk\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Program Files\Debugging Tools for Windows %28x64%29\sdk\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\Debugging Tools for Windows %28x64%29\sdk\lib\amd64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Repository\ExtCS\sdk\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Repository\ExtCS\sdk\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Program Files\Debugging Tools for Windows %28x64%29\sdk\inc;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Repository\ExtCS\sdk\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -105,7 +106,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>ExtCS.def</ModuleDefinitionFile>
       <AdditionalDependencies>dbgeng.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Program Files\Debugging Tools for Windows %28x64%29\sdk\lib\i386;C:\Users\rohitra\Documents\Visual Studio 2012\Projects\ExtCS\WindbgManagedExt\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x86;C:\Repository\ExtCS\WindbgManagedExt\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -121,7 +122,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>ExtCS.def</ModuleDefinitionFile>
       <AdditionalDependencies>dbgeng.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Program Files\Debugging Tools for Windows %28x64%29\sdk\lib\amd64;C:\tfssourcecode\ExtCS\ExtCS\ExtCS\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x64;C:\tfssourcecode\ExtCS\ExtCS\ExtCS\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,6 +141,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>ExtCS.def</ModuleDefinitionFile>
+	  <AdditionalDependencies>dbgeng.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x86;C:\Repository\ExtCS\WindbgManagedExt\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -158,7 +161,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>ExtCS.def</ModuleDefinitionFile>
-      <AdditionalDependencies>dbgeng.lib;%(AdditionalDependencies)</AdditionalDependencies>
+	  <AdditionalDependencies>dbgeng.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x64;C:\Repository\ExtCS\WindbgManagedExt\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

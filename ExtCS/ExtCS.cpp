@@ -1,6 +1,4 @@
 #include "ExtCS.h"
-//#include "dbgexts.h"
-#include <dbgeng.h>
 #include <msclr\auto_gcroot.h>
 
 
@@ -9,17 +7,13 @@ using namespace System;
 using namespace System::Runtime::InteropServices; // Marshal
 
 IDebugAdvanced2*  gAdvancedDebug2=NULL;
-
 IDebugControl4*   gDebugControl4=NULL;
-
 IDebugControl*    gExecuteCmd=NULL;
-
 IDebugClient*     gDebugClient=NULL;
 
 EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG Flags)
 {
 	HRESULT hr = S_OK; 
-	//IDebugClient* pDebugClient; 
 	hr = DebugCreate(__uuidof(IDebugClient), (void **)&gDebugClient); 
 	if (hr != S_OK) {
 		DbgPrintf(L"EXTCS: DebugExtensionInitialize failed to create DebugClient\n");
@@ -36,7 +30,6 @@ EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG 
 	*Flags = 0;
 
 	return hr;
-
 }
 
 EXPORT void CALLBACK DebugExtensionUninitialize()
@@ -59,7 +52,7 @@ void DbgPrintf(const wchar_t* format, ...)
 }
 
 //this method calls into the managed code
-//scrip is the argument passed from the debugger
+//script is the argument passed from the debugger
 HRESULT CallManagedCode(char * script)
 {
 	//calling into managed debugger
