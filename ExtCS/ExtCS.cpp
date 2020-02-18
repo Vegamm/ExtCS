@@ -11,6 +11,8 @@ IDebugControl4*   gDebugControl4=NULL;
 IDebugControl*    gExecuteCmd=NULL;
 IDebugClient*     gDebugClient=NULL;
 
+const char* filename = "ExtCS.log";
+
 EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG Flags)
 {
 	HRESULT hr = S_OK; 
@@ -26,19 +28,26 @@ EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG 
 		return E_FAIL;
 	}
 
+	// Probably remove this.
+	// Opens a log to save all output from the debugger.
+	gDebugControl4->OpenLogFile(filename, true);
+
 	*Version = DEBUG_EXTENSION_VERSION(MAJOR_VERSION, MINOR_VERSION);
 	*Flags = 0;
 
 	return hr;
 }
 
+// Called on unload.
 EXPORT void CALLBACK DebugExtensionUninitialize()
 {
 	DbgPrintf(L"EXTCS: DebugExtensionUninitialize\n");
+
+	// Probably remove this.
+	gDebugControl4->CloseLogFile();
 }
 
-//printing to the debugger
-//not used but it is defined anyway.
+// Prints to the debugger
 void DbgPrintf(const wchar_t* format, ...)
 {
 	wchar_t buffer[1024];
@@ -55,8 +64,9 @@ void DbgPrintf(const wchar_t* format, ...)
 //script is the argument passed from the debugger
 HRESULT CallManagedCode(char * script)
 {
-	//calling into managed debugger
- 	 ExtCS::Debugger::ManagedExtCS::Execute(gcnew System::String(script), (DotNetDbg::IDebugClient^)Marshal::GetObjectForIUnknown(IntPtr(gDebugClient)));
+	 // Calling managed debugger
+ 	 ExtCS::Debugger::ManagedExtCS::Execute(gcnew System::String(script), (DotNetDbg::IDebugClient^)Marshal::GetObjectForIUnknown(IntPtr(gDebugClient)), (DotNetDbg::IDebugControl4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugControl4)));
+	 
 	 //clearing the global buffer of outputcallbacks
 	 //this is never used.but for safer side,it is cleared.
 	 //inisdemanged code,always a new outpucallbacl is installed to debugclient.
@@ -88,7 +98,6 @@ HRESULT help(IDebugClient* debugClient, PCSTR args)
 	
 	return CallManagedCode(helpargs);
 }
-
 
 HRESULT clearscriptsession(IDebugClient* debugClient, PCSTR args)
 {

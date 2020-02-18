@@ -4,6 +4,7 @@ using Roslyn.Scripting.CSharp;
 using Roslyn.Scripting;
 using DotNetDbg;
 using System.IO;
+using System.Reflection;
 
 
 namespace ExtCS.Debugger
@@ -14,12 +15,17 @@ namespace ExtCS.Debugger
 
 		private static ManagedExtCS mManagedExtensionHost;
 
+		private static readonly Assembly SYSTEM_DIAGNOSTICS_DEBUG_ASM = typeof(System.Diagnostics.Debug).Assembly;
+		private static readonly Assembly SYSTEM_DYNAMIC_DYNAMICOBJECT_ASM = typeof(System.Dynamic.DynamicObject).Assembly;
+		private static readonly Assembly EXTCS_DEBUGGER_ASM = Assembly.GetExecutingAssembly();
+
 		// should these be private? -mv
 		//bool IsSessionPersisted = false;
+		//static string mHistory;
+
 		static bool mIsScript = false;
 		static bool mIsDebugMode = false;
 		static string mCSScript;
-		//static string mHistory;
 		static string mParsedPath = null;
 
 		#endregion
@@ -60,22 +66,25 @@ namespace ExtCS.Debugger
 		public static string Execute(string args, IDebugClient debugClient)
 		{
 
-			if (CSDebugger == null)
+			if (CSDebugger is null)
 			{
 				IDebugClient client;
 				debugClient.CreateClient(out client);
 				ManagedDebugClient = client;
-
-				var windbgDebugger = new Debugger(client);
-				CSDebugger = windbgDebugger;
+				CSDebugger = new Debugger(client);
 			}
-			//testig the execute function
-			//string interoutput = windbgDebugger.Execute("k");
-			//windbgDebugger.OutputLine(interoutput);
-			bool persistSession = true;
 
-			//windbgDebugger.OutputLine("starting {0} ", "Execute");
+			// Testing the execute function
+			//string test = CSDebugger.Execute("k");
+			//CSDebugger.Output(test);
+
+			bool useExistingSession = true;
+
+			//CSDebugger.OutputLine("starting {0} ", "Execute");
+
 			Output = string.Empty;
+
+			// TODO: separate each case into its own method.
 			try
 			{
 				ArgumentsHelper arguments = new ArgumentsHelper(args);
@@ -91,7 +100,7 @@ namespace ExtCS.Debugger
 						mParsedPath = arguments["-file"];
 						context.Args = arguments;
 						context.ScriptLocation = Path.GetDirectoryName(mParsedPath);
-						persistSession = true;
+						useExistingSession = true;
 
 					}
 					else if (arguments.HasArgument("-debug"))
@@ -106,6 +115,7 @@ namespace ExtCS.Debugger
 							mIsDebugMode = true;
 							Debugger.GetCurrentDebugger().Output("Script debug mode is on\n");
 						}
+
 						return "";
 					}
 					else if (arguments.HasArgument("-clear"))
@@ -122,8 +132,9 @@ namespace ExtCS.Debugger
 						mCSScript = args;
 					}
 
-					var session = CreateSession(CSDebugger, persistSession); //session.Execute("using WindbgManagedExt;");
-
+					Session session = CreateSession(CSDebugger, useExistingSession); 
+					
+					//session.Execute("using WindbgManagedExt;");
 					//Submission<Object> CSession = session.CompileSubmission<Object>(mCSScript);
 					//var references = CSession.Compilation.References;
 					//foreach (MetadataReference  reference in references)
@@ -133,36 +144,160 @@ namespace ExtCS.Debugger
 					//}
 
 					if (mIsScript)
+					{
 						session.Execute(mCSScript);
+					}
 					else
 					{
 						if (CSDebugger.Context.Debug)
+						{
 							DebuggerScriptEngine.Execute(session, mParsedPath);
+						}
 						else
+						{
 							session.ExecuteFile(mParsedPath);
+						}
 					}
 				}
 				else
+				{
 					ShowHelp(arguments["-help"]);
-
+				}
 			}
 			catch (Exception ex)
 			{
-
 				Session = null;
 				CSDebugger.OutputError("\n\nException while executing the script {0}", ex.Message);
 				CSDebugger.OutputDebugInfo("\n Details: {0} \n", ex.ToString());
-
 			}
-			//windbgDebugger.OutputLine("ending Execute");
+
+			//CSDebugger.Output("ending Execute");
 
 			CSDebugger.Output(Output);
 			CSDebugger.Output("\n");
-			Output = "";
+			Output = string.Empty;
 
+			// What exactly are we returning here?
 			return Output;
 		}
 
+		public static string Execute(string args, IDebugClient debugClient, IDebugControl4 debugControl4)
+		{
+
+			if (CSDebugger is null)
+			{
+				IDebugClient client;
+				debugClient.CreateClient(out client);
+				ManagedDebugClient = client;
+				CSDebugger = new Debugger(client);
+			}
+
+			// Testing the execute function
+			//string test = CSDebugger.Execute("k");
+			//CSDebugger.Output(test);
+
+			bool useExistingSession = true;
+
+			//CSDebugger.OutputLine("starting {0} ", "Execute");
+
+			Output = string.Empty;
+
+			// TODO: separate each case into its own method.
+			try
+			{
+				ArgumentsHelper arguments = new ArgumentsHelper(args);
+
+				if (arguments.HasArgument("-help") == false)
+				{
+					ScriptContext context = new ScriptContext();
+					Debugger.GetCurrentDebugger().Context = context;
+					context.Debug = mIsDebugMode;
+					if (arguments.HasArgument("-file"))
+					{
+						mIsScript = false;
+						mParsedPath = arguments["-file"];
+						context.Args = arguments;
+						context.ScriptLocation = Path.GetDirectoryName(mParsedPath);
+						useExistingSession = true;
+
+					}
+					else if (arguments.HasArgument("-debug"))
+					{
+						if (mIsDebugMode)
+						{
+							mIsDebugMode = false;
+							Debugger.GetCurrentDebugger().Output("Script debug mode is off\n");
+						}
+						else
+						{
+							mIsDebugMode = true;
+							Debugger.GetCurrentDebugger().Output("Script debug mode is on\n");
+						}
+
+						return "";
+					}
+					else if (arguments.HasArgument("-clear"))
+					{
+						Session = null;
+						DebuggerScriptEngine.Clear();
+						Debugger.GetCurrentDebugger().Output("Script session cleared\n");
+						Output = string.Empty;
+						return "Session cleared";
+					}
+					else
+					{
+						mIsScript = true;
+						mCSScript = args;
+					}
+
+					Session session = CreateSession(CSDebugger, useExistingSession);
+
+					//session.Execute("using WindbgManagedExt;");
+					//Submission<Object> CSession = session.CompileSubmission<Object>(mCSScript);
+					//var references = CSession.Compilation.References;
+					//foreach (MetadataReference  reference in references)
+					//{
+					//    if (reference.Display.Contains("ExtCS.Debugger"))
+					//        CSession.Compilation.RemoveReferences(reference);
+					//}
+
+					if (mIsScript)
+					{
+						session.Execute(mCSScript);
+					}
+					else
+					{
+						if (CSDebugger.Context.Debug)
+						{
+							DebuggerScriptEngine.Execute(session, mParsedPath);
+						}
+						else
+						{
+							session.ExecuteFile(mParsedPath);
+						}
+					}
+				}
+				else
+				{
+					ShowHelp(arguments["-help"]);
+				}
+			}
+			catch (Exception ex)
+			{
+				Session = null;
+				CSDebugger.OutputError("\n\nException while executing the script {0}", ex.Message);
+				CSDebugger.OutputDebugInfo("\n Details: {0} \n", ex.ToString());
+			}
+
+			//CSDebugger.Output("ending Execute");
+
+			CSDebugger.Output(Output);
+			CSDebugger.Output("\n");
+			Output = string.Empty;
+
+			// What exactly are we returning here?
+			return Output;
+		}
 		#endregion
 
 		#region Private Static Methods
@@ -221,33 +356,30 @@ namespace ExtCS.Debugger
 
 		}
 
-		private static Session CreateSession(Debugger currentDebugger, bool getOldSession)
+		private static Session CreateSession(Debugger currentDebugger, bool useExistingSession)
 		{
 			//mCSScript = script;
 			//var s = new CommonScriptEngine();
 
-			if (getOldSession && Session != null)
+			if (useExistingSession && Session != null)
 				return Session;
 
-			var asm = System.Reflection.Assembly.GetExecutingAssembly();
+			var scriptEngine = new ScriptEngine();
 
-			var csharpEngine = new ScriptEngine(null, null);
+			scriptEngine.ImportNamespace("System");
+			scriptEngine.ImportNamespace("System.Collections.Generic");
+			scriptEngine.ImportNamespace("System.Text");
+			scriptEngine.ImportNamespace("System.IO");
 
-			//csharpEngine.AddReference("System.Diagnostics");
-			csharpEngine.ImportNamespace("System");
-			csharpEngine.ImportNamespace("System.Collections.Generic");
-			//csharpEngine.ImportNamespace("System.Linq");
-			csharpEngine.ImportNamespace("System.Text");
-			csharpEngine.ImportNamespace("System.IO");
-			//csharpEngine.ImportNamespace("System.Diagnostics");
+			scriptEngine.SetReferenceSearchPaths(EXTCS_DEBUGGER_ASM.Location);
+			scriptEngine.AddReference(SYSTEM_DIAGNOSTICS_DEBUG_ASM);
+			scriptEngine.AddReference(SYSTEM_DYNAMIC_DYNAMICOBJECT_ASM);
+			scriptEngine.AddReference(EXTCS_DEBUGGER_ASM);
 
-			csharpEngine.SetReferenceSearchPaths(asm.Location);
-			csharpEngine.AddReference(typeof(System.Diagnostics.Debug).Assembly);
-			csharpEngine.AddReference(typeof(System.Dynamic.DynamicObject).Assembly);
-			csharpEngine.AddReference(asm);
-			csharpEngine.ImportNamespace("ExtCS.Debugger");
+			// This can only be imported after the reference has been added.
+			scriptEngine.ImportNamespace("ExtCS.Debugger");
 
-			Session = csharpEngine.CreateSession(currentDebugger);
+			Session = scriptEngine.CreateSession(currentDebugger, currentDebugger.GetType());
 
 			return Session;
 		}
