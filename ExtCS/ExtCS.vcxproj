@@ -106,7 +106,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>ExtCS.def</ModuleDefinitionFile>
       <AdditionalDependencies>dbgeng.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x86;C:\Repository\ExtCS\WindbgManagedExt\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x86;C:\Repository\ExtCS\ExtCS.Debugger\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -142,7 +142,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>ExtCS.def</ModuleDefinitionFile>
 	  <AdditionalDependencies>dbgeng.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x86;C:\Repository\ExtCS\WindbgManagedExt\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x86;C:\Repository\ExtCS\ExtCS.Debugger\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -162,7 +162,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>ExtCS.def</ModuleDefinitionFile>
 	  <AdditionalDependencies>dbgeng.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x64;C:\Repository\ExtCS\WindbgManagedExt\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Repository\ExtCS\sdk\lib\x64;C:\Repository\ExtCS\ExtCS.Debugger\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -176,7 +176,7 @@
     <None Include="ExtCS.def" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WindbgManagedExt\ExtCS.Debugger.csproj">
+    <ProjectReference Include="..\ExtCS.Debugger\ExtCS.Debugger.csproj">
       <Project>{9096a792-a155-4a83-899e-5f32a79a1978}</Project>
     </ProjectReference>
   </ItemGroup>

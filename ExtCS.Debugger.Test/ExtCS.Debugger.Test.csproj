@@ -85,25 +85,16 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="aspxrequests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WindbgManagedExt\ExtCS.Debugger.csproj">
+    <ProjectReference Include="..\ExtCS.Debugger\ExtCS.Debugger.csproj">
       <Project>{9096a792-a155-4a83-899e-5f32a79a1978}</Project>
       <Name>ExtCS.Debugger</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="aspxrequests.csx" />
-    <None Include="Copy of showerrors.csx" />
-    <None Include="highCPURequests.csx" />
-    <None Include="HighCPUThreads.csx" />
     <None Include="packages.config" />
-    <None Include="requests.csx" />
-    <None Include="showerrors.csx" />
-    <None Include="base.csx" />
-    <None Include="sosheap.csx" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
