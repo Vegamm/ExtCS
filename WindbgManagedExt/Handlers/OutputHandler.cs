@@ -29,11 +29,11 @@ namespace ExtCS.Debugger
 		/// <param name="Mask">Flags describing the output.</param>
 		/// <param name="Text">The text to output.</param>
 		/// <returns>HRESULT which is almost always S_OK since errors are ignored by the debugger engine unless they signal an RPC error.</returns>
-		public int Output(DEBUG_OUTPUT Mask, string Text)
+		public int Output(DEBUG_OUTPUT mask, string outputText)
 		{
 			//mStbOutput.Append(Text);
 			//return S_OK;
-			return Output2(DEBUG_OUTCB.TEXT, 0, (UInt64)Mask, Text);
+			return Output2(DEBUG_OUTCB.TEXT, 0, (UInt64)mask, outputText);
 		}
 
 		/// <summary>

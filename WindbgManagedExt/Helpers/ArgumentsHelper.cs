@@ -8,8 +8,6 @@ namespace ExtCS
 
 		#region Fields
 
-		//old mRegex @"(?<argName>\-\w+)\s(?<argvalue>\S+)?",
-		private string mArgs;
 		Dictionary<string, string> mArgsList;
 		Regex mRegex = new Regex(
 			@"(\s|^)(?<argname>\-\w+\s?)(?<argvalue>\s[^-]\S+)?",
@@ -45,13 +43,14 @@ namespace ExtCS
 			get { return mArgsList; }
 		}
 
+		public string Args { get; internal set; }
 		#endregion
 
 		#region Constructor
 
 		public ArgumentsHelper(string args)
 		{
-			mArgs = args;
+			Args = args.Trim('"');
 			IntArgs();
 		}
 
@@ -81,13 +80,13 @@ namespace ExtCS
 		//
 		private void IntArgs()
 		{
-			if (string.IsNullOrEmpty(mArgs))
+			if (string.IsNullOrEmpty(Args))
 			{
 				return;
 			}
 
 			mArgsList = new Dictionary<string, string>();
-			foreach (Match item in mRegex.Matches(mArgs))
+			foreach (Match item in mRegex.Matches(Args))
 			{
 				string key = item.Groups["argname"].Value.Trim().ToUpperInvariant();
 				string value = item.Groups["argvalue"].Value.Trim();

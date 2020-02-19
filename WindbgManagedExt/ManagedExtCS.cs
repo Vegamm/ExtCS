@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Text;
 using Roslyn.Scripting.CSharp;
 using Roslyn.Scripting;
@@ -19,14 +20,13 @@ namespace ExtCS.Debugger
 		private static readonly Assembly SYSTEM_DYNAMIC_DYNAMICOBJECT_ASM = typeof(System.Dynamic.DynamicObject).Assembly;
 		private static readonly Assembly EXTCS_DEBUGGER_ASM = Assembly.GetExecutingAssembly();
 
-		// should these be private? -mv
 		//bool IsSessionPersisted = false;
 		//static string mHistory;
 
-		static bool mIsScript = false;
-		static bool mIsDebugMode = false;
-		static string mCSScript;
-		static string mParsedPath = null;
+		private static bool mIsScript;
+		private static bool mIsDebugMode;
+		private static string mCSScript;
+		private static string mParsedPath;
 
 		#endregion
 
@@ -38,6 +38,7 @@ namespace ExtCS.Debugger
 
 		public static string Output { get; set; }
 
+		// TODO: Consider removing this and leaving the debugClient solely to the Debugger.
 		public static unsafe IDebugClient ManagedDebugClient { get; set; }
 
 		public static Session Session { get; set; }
@@ -63,6 +64,8 @@ namespace ExtCS.Debugger
 			return Execute(args, null);
 		}
 
+		// This currently does not work because the debugControl does not exist.
+		// Debugger constructor needs logic to query for the Com object.
 		public static string Execute(string args, IDebugClient debugClient)
 		{
 
@@ -145,7 +148,10 @@ namespace ExtCS.Debugger
 
 					if (mIsScript)
 					{
-						session.Execute(mCSScript);
+						var result = session.Execute(mCSScript);
+
+						// TODO: Remove after done debugging application.
+						Debugger.GetCurrentDebugger().Output(result);
 					}
 					else
 					{
@@ -181,20 +187,18 @@ namespace ExtCS.Debugger
 			return Output;
 		}
 
-		public static string Execute(string args, IDebugClient debugClient, IDebugControl4 debugControl4)
+		public static string Execute(string args, IDebugClient debugClient, IDebugControl4 debugControl)
 		{
 
 			if (CSDebugger is null)
 			{
 				IDebugClient client;
+
+				// Whats the purpose of creating a client here if it is already provided as a parameter?
 				debugClient.CreateClient(out client);
 				ManagedDebugClient = client;
-				CSDebugger = new Debugger(client);
+				CSDebugger = new Debugger(client, debugControl);
 			}
-
-			// Testing the execute function
-			//string test = CSDebugger.Execute("k");
-			//CSDebugger.Output(test);
 
 			bool useExistingSession = true;
 
@@ -219,51 +223,34 @@ namespace ExtCS.Debugger
 						context.Args = arguments;
 						context.ScriptLocation = Path.GetDirectoryName(mParsedPath);
 						useExistingSession = true;
-
 					}
 					else if (arguments.HasArgument("-debug"))
 					{
-						if (mIsDebugMode)
-						{
-							mIsDebugMode = false;
-							Debugger.GetCurrentDebugger().Output("Script debug mode is off\n");
-						}
-						else
-						{
-							mIsDebugMode = true;
-							Debugger.GetCurrentDebugger().Output("Script debug mode is on\n");
-						}
-
+						mIsDebugMode = !mIsDebugMode;
+						string debugState = (mIsDebugMode ? "on" : "off");
+						Debugger.GetCurrentDebugger().Output($"Script debug mode is {debugState}.\n");
 						return "";
 					}
 					else if (arguments.HasArgument("-clear"))
 					{
 						Session = null;
 						DebuggerScriptEngine.Clear();
-						Debugger.GetCurrentDebugger().Output("Script session cleared\n");
+						Debugger.GetCurrentDebugger().Output("Script session cleared.\n");
 						Output = string.Empty;
 						return "Session cleared";
 					}
 					else
 					{
 						mIsScript = true;
-						mCSScript = args;
+						mCSScript = arguments.Args;
 					}
 
 					Session session = CreateSession(CSDebugger, useExistingSession);
 
-					//session.Execute("using WindbgManagedExt;");
-					//Submission<Object> CSession = session.CompileSubmission<Object>(mCSScript);
-					//var references = CSession.Compilation.References;
-					//foreach (MetadataReference  reference in references)
-					//{
-					//    if (reference.Display.Contains("ExtCS.Debugger"))
-					//        CSession.Compilation.RemoveReferences(reference);
-					//}
-
 					if (mIsScript)
 					{
-						session.Execute(mCSScript);
+						var result = session.Execute(mCSScript);
+						Debugger.GetCurrentDebugger().Output(result);
 					}
 					else
 					{
@@ -295,7 +282,7 @@ namespace ExtCS.Debugger
 			CSDebugger.Output("\n");
 			Output = string.Empty;
 
-			// What exactly are we returning here?
+			// What exactly are we returning here? -mv
 			return Output;
 		}
 		#endregion
@@ -304,15 +291,15 @@ namespace ExtCS.Debugger
 
 		private static void ShowHelp(string command)
 		{
-			string sCreditBy = "Developed by   - Rohith Rajan (rohitra@microsoft.com)\n";
+			string sCreditBy = "Developed by - Mitchell Vega (vegamm215@gmail.com)\n";
 			string sStartText = " ExtCS - Extend your debugger using CSharp \n================================================\nHelp for ExtCS.dll\n";
-			string sTextExecute = "<exec cmd=\"!extcs.help execute\">!execute</exec>\t\t ->execute a csharp script file e.g. <b>!execute -file c:\\scripts\\heapstat.csx </b>\n";
-			string sTextDebug = "<exec cmd=\"!extcs.help debug\">!debug</exec>\t\t ->Toggles debugging flag e.g. <b>!debug</b> \n";
-			string sTextClearScriptSession = "<exec cmd=\"!extcs.help clearscriptsession\">!clearscriptsession</exec>\t\t ->Clears the current script context session .This is useful when using !execute as a REPL \n";
+			string sTextExecute = "<exec cmd=\"!extcs.help execute\">!execute</exec> -> Execute a csharp script file e.g. <b>!execute -file c:\\scripts\\sosheap.csx</b>\n";
+			string sTextDebug = "<exec cmd=\"!extcs.help debug\">!debug</exec> -> Toggles debugging flag e.g. <b>!debug</b>\n";
+			string sTextClearScriptSession = "<exec cmd=\"!extcs.help clearscriptsession\">!clearscriptsession</exec> -> Clears the current script context session. This is useful when using !execute as a REPL.\n";
 
 			StringBuilder outStb = new StringBuilder();
 
-			if (!String.IsNullOrEmpty(command))
+			if (String.IsNullOrEmpty(command) == false)
 			{
 				command = command.Trim().ToUpperInvariant();
 				switch (command)
@@ -352,26 +339,24 @@ namespace ExtCS.Debugger
 				outStb.AppendLine(sTextExecute).AppendLine(sTextDebug).AppendLine(sTextClearScriptSession);
 				outStb.Append(sCreditBy);
 			}
-			CSDebugger.Output(outStb.ToString());
 
+			CSDebugger.Output(outStb.ToString());
 		}
 
 		private static Session CreateSession(Debugger currentDebugger, bool useExistingSession)
 		{
-			//mCSScript = script;
-			//var s = new CommonScriptEngine();
-
 			if (useExistingSession && Session != null)
 				return Session;
 
 			var scriptEngine = new ScriptEngine();
 
 			scriptEngine.ImportNamespace("System");
+			scriptEngine.ImportNamespace("System.Collections");
 			scriptEngine.ImportNamespace("System.Collections.Generic");
 			scriptEngine.ImportNamespace("System.Text");
 			scriptEngine.ImportNamespace("System.IO");
 
-			scriptEngine.SetReferenceSearchPaths(EXTCS_DEBUGGER_ASM.Location);
+			//scriptEngine.SetReferenceSearchPaths(EXTCS_DEBUGGER_ASM.Location);
 			scriptEngine.AddReference(SYSTEM_DIAGNOSTICS_DEBUG_ASM);
 			scriptEngine.AddReference(SYSTEM_DYNAMIC_DYNAMICOBJECT_ASM);
 			scriptEngine.AddReference(EXTCS_DEBUGGER_ASM);
@@ -379,7 +364,7 @@ namespace ExtCS.Debugger
 			// This can only be imported after the reference has been added.
 			scriptEngine.ImportNamespace("ExtCS.Debugger");
 
-			Session = scriptEngine.CreateSession(currentDebugger, currentDebugger.GetType());
+			Session = scriptEngine.CreateSession(CSDebugger, CSDebugger.GetType());
 
 			return Session;
 		}

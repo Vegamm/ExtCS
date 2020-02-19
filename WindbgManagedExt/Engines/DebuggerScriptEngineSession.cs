@@ -40,21 +40,29 @@ namespace ExtCS.Debugger
 		public static Object Execute(Session session, string path)
 		{
 			Submission<object> submission;
-			object retrunValue = null;
+			object returnValue = null;
 			string code = null;
+
 			try
 			{
+				if (session is null)
+				{
+					Debugger.GetCurrentDebugger().OutputDebugInfo("Session is null!");
+					return null;
+				}
+
 				code = File.ReadAllText(path);
-				submission = session.CompileSubmission<object>(code, path: path);
+				submission = session.CompileSubmission<object>(code);
 			}
 			catch (Exception compileException)
 			{
+				Debugger.GetCurrentDebugger().OutputDebugInfo("Exception on compile submission.");
 				throw compileException;
 			}
 
-			var exeBytes = new byte[0];
-			var pdbBytes = new byte[0];
-			var compileSuccess = false;
+			byte[] exeBytes = new byte[0];
+			byte[] pdbBytes = new byte[0];
+			bool compileSuccess = false;
 
 			using (var exeStream = new MemoryStream())
 			using (var pdbStream = new MemoryStream())
@@ -93,7 +101,7 @@ namespace ExtCS.Debugger
 				try
 				{
 					Debugger.GetCurrentDebugger().OutputDebugInfo("Invoking method.");
-					retrunValue = method.Invoke(null, new[] { session });
+					returnValue = method.Invoke(null, new[] { session });
 				}
 				catch (Exception executeException)
 				{
@@ -110,7 +118,7 @@ namespace ExtCS.Debugger
 				}
 			}
 
-			return retrunValue;
+			return returnValue;
 		}
 
 		#endregion

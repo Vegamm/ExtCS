@@ -43,7 +43,6 @@ if(matches.Success)
 		Output(exceptionMessage);
 		}
 		 Output("\n");
-
 	 }
 
 	}

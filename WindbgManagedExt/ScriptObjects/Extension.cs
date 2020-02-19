@@ -18,6 +18,13 @@ namespace ExtCS.Debugger
 		public Extension(string extensionName)
 		{
 			debugger = Debugger.GetCurrentDebugger();
+
+			if (debugger is null)
+			{
+				// failure
+				throw new Exception("No debugger available.");
+			}
+
 			extensionHandle = debugger.GetExtensionHandle(extensionName);
 		}
 

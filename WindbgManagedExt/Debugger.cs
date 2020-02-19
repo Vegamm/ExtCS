@@ -29,9 +29,17 @@ namespace ExtCS.Debugger
 
 		#region Constructors
 
+		// TODO: Add logic to get the IDebugControl4 in this constructor.
 		public Debugger(IDebugClient debugClient)
 		{
 			DebugClient = debugClient as IDebugClient5;
+			sCurrent = this;
+		}
+
+		public Debugger(IDebugClient debugClient, IDebugControl4 debugControl)
+		{
+			DebugClient = debugClient as IDebugClient5;
+			DebugControl = debugControl;
 			sCurrent = this;
 		}
 
@@ -106,33 +114,24 @@ namespace ExtCS.Debugger
 			IntPtr outputCallbacks;
 			IntPtr previousCallbacks;
 
-			//IDebugClient executionClient;
-			//int hr = this.DebugClient.CreateClient(out executionClient);
-			//var newDebugger = new Debugger(executionClient);
 			string output = null;
-			//if (FAILED(hr))
-			//{
-			//    this.OutputVerboseLine("SimpleOutputHandler.Install Failed creating a new debug client for execution: {0:x8}", hr);
-			//    outputCallbacks = IntPtr.Zero;
-
-			//    return null;
-			//}
 
 			//save previous callbacks
 			OutputDebugInfo("executing command {0} \n", command);
 			previousCallbacks = SavePreviousCallbacks();
 
-			int InstallationHRESULT = InitializeOutputHandler();
+			// Sets up output callback
+			int hrInstallation = InitializeOutputHandler();
 
-			if (FAILED(InstallationHRESULT))
+			if (FAILED(hrInstallation))
 			{
 				this.OutputVerboseLine("Failed installing a new outputcallbacks client for execution");
 				outputCallbacks = IntPtr.Zero;
 				return null;
 			}
 
-			//set the previous callback handler
-			var hrExecution = this.DebugControl.Execute(DEBUG_OUTCTL.THIS_CLIENT, command, DEBUG_EXECUTE.DEFAULT | DEBUG_EXECUTE.NO_REPEAT);
+			// Executes the command and sends output to this client's callback only.
+			int hrExecution = this.DebugControl.Execute(DEBUG_OUTCTL.THIS_CLIENT, command, DEBUG_EXECUTE.DEFAULT | DEBUG_EXECUTE.NO_REPEAT);
 			if (FAILED(hrExecution))
 			{
 				this.OutputVerboseLine("Failed creating a new debug client for execution:");
@@ -141,7 +140,7 @@ namespace ExtCS.Debugger
 			}
 
 			//revert previous callbacks
-			InstallationHRESULT = RevertCallBacks(previousCallbacks);
+			hrInstallation = RevertCallBacks(previousCallbacks);
 
 			//getting the output from the buffer.
 			output = sOutHandler.ToString();
@@ -176,28 +175,26 @@ namespace ExtCS.Debugger
 		public void OutputDebugInfo(string format, params object[] args)
 		{
 			if (this.Context.Debug)
+			{
 				Output(string.Format("\ndebuginfo:" + format, args));
+			}
 		}
 
 		public void Output(object output)
 		{
-			// if (args != null && args.Length > 0)
-			//   OutputHelper(output, args, DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
-
-			OutputHelper(output.ToString(), DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
+			if (output != null)
+			{
+				OutputHelper(output.ToString(), DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
+			}
 		}
 
 		public void Output(string output)
 		{
-			// if (args != null && args.Length > 0)
-			//   OutputHelper(output, args, DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
-
-			OutputHelper(output, DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
+			if (string.IsNullOrEmpty(output) == false)
+			{
+				OutputHelper(output, DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
+			}
 		}
-		//public void Output(string format,params string[] args)
-		//{
-		//    OutputHelper(output, DEBUG_OUTPUT.NORMAL | DEBUG_OUTPUT.VERBOSE);
-		//}
 
 		public string GetString(UInt64 address)
 		{
@@ -455,18 +452,17 @@ namespace ExtCS.Debugger
 		public void OutputError(string p, params object[] args)
 		{
 			string formatted = String.Format(p, args);
-
 			OutputHelper(formatted, DEBUG_OUTPUT.ERROR);
 		}
 
-		public int RevertCallBacks(IntPtr PreviousCallbacks)
+		public int RevertCallBacks(IntPtr ptrPreviousCallbacks)
 		{
-
 			this.DebugClient.FlushCallbacks();
-			//restoring the previous callbacks
-			var InstallationHRESULT = this.DebugClient.SetOutputCallbacks(PreviousCallbacks);
+			
+			// Sets the output callbacks to the previous callbacks.
+			var hrInstallation = this.DebugClient.SetOutputCallbacks(ptrPreviousCallbacks);
 
-			return InstallationHRESULT;
+			return hrInstallation;
 		}
 
 		#endregion
@@ -481,17 +477,19 @@ namespace ExtCS.Debugger
 				sOutHandler = new OutputHandler();
 			}
 
-			IntPtr ThisIDebugOutputCallbacksPtr = Marshal.GetComInterfaceForObject(sOutHandler, typeof(IDebugOutputCallbacks2));
-			int InstallationHRESULT = this.DebugClient.SetOutputCallbacks(ThisIDebugOutputCallbacksPtr);
-			return InstallationHRESULT;
+			IntPtr ptrDebugOutputCallbacks2 = Marshal.GetComInterfaceForObject(sOutHandler, typeof(IDebugOutputCallbacks2));
+			int hrInstallation = this.DebugClient.SetOutputCallbacks(ptrDebugOutputCallbacks2);
+			return hrInstallation;
 		}
 
+		// TODO: Switch parameter order so that it matches with the native call.
 		private int OutputHelper(string formattedString, DEBUG_OUTPUT outputType)
 		{
 
 			//formattedString = EscapePercents(formattedString);
 			//mDebugOutput.Append(formattedString);
 
+			//return DebugControl.Output(outputType, formattedString);
 			return DebugControl.ControlledOutput(DEBUG_OUTCTL.ALL_OTHER_CLIENTS | DEBUG_OUTCTL.DML, outputType, formattedString);
 			//return DebugControl.ControlledOutputWide(mOutCtl, outputType, formattedString);
 		}
@@ -503,15 +501,15 @@ namespace ExtCS.Debugger
 
 		private IntPtr SavePreviousCallbacks()
 		{
-			IntPtr PreviousCallbacks;
+			IntPtr ptrPreviousCallbacks;
 			this.DebugClient.FlushCallbacks();
+
 			//get previous callbacks
 			//saving the previous callbacks
-			this.DebugClient.GetOutputCallbacks(out PreviousCallbacks); /* We will need to release this */
+			this.DebugClient.GetOutputCallbacks(out ptrPreviousCallbacks); /* We will need to release this */
 
-			return PreviousCallbacks;
+			return ptrPreviousCallbacks;
 		}
-
 
 		#endregion
 
