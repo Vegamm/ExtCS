@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.Text;
 using Roslyn.Scripting.CSharp;
 using Roslyn.Scripting;
