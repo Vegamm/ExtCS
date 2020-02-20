@@ -1,4 +1,0 @@
-SET SQL_SERVER=%1
-SET TARGET_DB=%2
-
-AlterWindbg_Db %SQL_SERVER% %TARGET_DB% > results.txt
