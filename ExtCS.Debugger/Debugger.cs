@@ -116,35 +116,43 @@ namespace ExtCS.Debugger
 
 			string output = null;
 
-			//save previous callbacks
-			OutputDebugInfo("executing command {0} \n", command);
+			// This doesn't do anything
+			//GCHandle dbgClient = GCHandle.Alloc(DebugControl);
+			//IntPtr ptrClient = (IntPtr)dbgClient;
+			//IDebugControl4 debugControl = (IDebugControl4) Marshal.GetObjectForIUnknown(ptrClient);
+
+			// Save previous callbacks
+			OutputDebugInfo($"executing command {command}\n");
 			previousCallbacks = SavePreviousCallbacks();
 
 			// Sets up output callback
 			int hrInstallation = InitializeOutputHandler();
-
 			if (FAILED(hrInstallation))
 			{
-				this.OutputVerboseLine("Failed installing a new outputcallbacks client for execution");
+				this.OutputVerboseLine("Failed installing a new output callbacks client for execution");
 				outputCallbacks = IntPtr.Zero;
 				return null;
 			}
 
-			// Executes the command and sends output to this client's callback only.
+			// Executes the command and sends output to this client's output callback only.
 			int hrExecution = this.DebugControl.Execute(DEBUG_OUTCTL.THIS_CLIENT, command, DEBUG_EXECUTE.DEFAULT | DEBUG_EXECUTE.NO_REPEAT);
 			if (FAILED(hrExecution))
 			{
-				this.OutputVerboseLine("Failed creating a new debug client for execution:");
+				this.OutputVerboseLine("Failed creating a new debug client for execution.");
 				outputCallbacks = IntPtr.Zero;
 				return null;
 			}
 
-			//revert previous callbacks
+			// Revert previous callbacks
 			hrInstallation = RevertCallBacks(previousCallbacks);
+			if (FAILED(hrInstallation))
+			{
+				this.OutputVerboseLine("Failed reverting callbacks for client.");
+			}
 
 			//getting the output from the buffer.
 			output = sOutHandler.ToString();
-			OutputDebugInfo("command output:\n" + output);
+			OutputDebugInfo($"command output:\n{output}");
 			sOutHandler.mStbOutput.Length = 0;
 
 			//releasing the COM object.
@@ -461,7 +469,6 @@ namespace ExtCS.Debugger
 			
 			// Sets the output callbacks to the previous callbacks.
 			var hrInstallation = this.DebugClient.SetOutputCallbacks(ptrPreviousCallbacks);
-
 			return hrInstallation;
 		}
 
@@ -469,6 +476,10 @@ namespace ExtCS.Debugger
 
 		#region Private Methods
 
+		/// <summary>
+		/// Installs our implementation of the DebugOutputCallbacks2 with our DebugClient
+		/// </summary>
+		/// <returns></returns>
 		private int InitializeOutputHandler()
 		{
 			//creating new output handler to redirect output.

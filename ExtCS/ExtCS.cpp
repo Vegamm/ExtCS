@@ -11,8 +11,6 @@ IDebugControl4*   gDebugControl4=NULL;
 IDebugControl*    gExecuteCmd=NULL;
 IDebugClient*     gDebugClient=NULL;
 
-const char* filename = "ExtCS.log";
-
 EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG Flags)
 {
 	HRESULT hr = S_OK; 
@@ -64,8 +62,8 @@ void DbgPrintf(const wchar_t* format, ...)
 
 #pragma warning(default:4793)
 
-//this method calls into the managed code
-//script is the argument passed from the debugger
+// This method calls into the managed code
+// script is the argument passed from the debugger
 HRESULT CallManagedCode(char * script)
 {
 	// Testing the Output is working
@@ -73,7 +71,9 @@ HRESULT CallManagedCode(char * script)
 	// gDebugControl4->Output(DEBUG_OUTCTL_ALL_CLIENTS, outputText);
 
 	 // Calling managed debugger
- 	 ManagedExtCS::Execute(gcnew System::String(script), (DotNetDbg::IDebugClient^)Marshal::GetObjectForIUnknown(IntPtr(gDebugClient)), (DotNetDbg::IDebugControl4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugControl4)));
+ 	 ManagedExtCS::Execute(gcnew System::String(script), 
+		 (DotNetDbg::IDebugClient^)Marshal::GetObjectForIUnknown(IntPtr(gDebugClient)), 
+		 (DotNetDbg::IDebugControl4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugControl4)));
 	 
 	 // Clearing the global buffer of output callbacks
 	 // this is never used but for safer side, it is cleared.

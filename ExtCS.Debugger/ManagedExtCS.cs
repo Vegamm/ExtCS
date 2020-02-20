@@ -190,14 +190,13 @@ namespace ExtCS.Debugger
 		public static string Execute(string args, IDebugClient debugClient, IDebugControl4 debugControl)
 		{
 
-			if (CSDebugger is null)
+			if (debugClient != null && CSDebugger == null)
 			{
-				IDebugClient client;
-
 				// Whats the purpose of creating a client here if it is already provided as a parameter?
-				debugClient.CreateClient(out client);
-				ManagedDebugClient = client;
-				CSDebugger = new Debugger(client, debugControl);
+				//IDebugClient client;
+				//debugClient.CreateClient(out client);
+				ManagedDebugClient = debugClient;
+				CSDebugger = new Debugger(debugClient, debugControl);
 			}
 
 			bool useExistingSession = true;
