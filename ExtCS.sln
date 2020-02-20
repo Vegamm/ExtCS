@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExtCS", "ExtCS\ExtCS.vcxpro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtCS.Debugger", "ExtCS.Debugger\ExtCS.Debugger.csproj", "{9096A792-A155-4A83-899E-5F32A79A1978}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtCS.Debugger.Test", "ExtCS.Debugger.Test\ExtCS.Debugger.Test.csproj", "{9AAA055D-208D-44F8-976F-65DF0999329B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtCS.Debugger.Scripts", "ExtCS.Debugger.Scripts\ExtCS.Debugger.Scripts.csproj", "{97C24911-B1AC-4DA7-80B5-263E59A22098}"
 EndProject
 Global
@@ -56,22 +54,6 @@ Global
 		{9096A792-A155-4A83-899E-5F32A79A1978}.Release|Win32.Build.0 = Release|Any CPU
 		{9096A792-A155-4A83-899E-5F32A79A1978}.Release|x64.ActiveCfg = Release|x64
 		{9096A792-A155-4A83-899E-5F32A79A1978}.Release|x64.Build.0 = Release|x64
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|Win32.Build.0 = Debug|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|x64.ActiveCfg = Debug|x64
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Debug|x64.Build.0 = Debug|x64
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|Win32.ActiveCfg = Release|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|Win32.Build.0 = Release|Any CPU
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|x64.ActiveCfg = Release|x64
-		{9AAA055D-208D-44F8-976F-65DF0999329B}.Release|x64.Build.0 = Release|x64
 		{97C24911-B1AC-4DA7-80B5-263E59A22098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{97C24911-B1AC-4DA7-80B5-263E59A22098}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97C24911-B1AC-4DA7-80B5-263E59A22098}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU

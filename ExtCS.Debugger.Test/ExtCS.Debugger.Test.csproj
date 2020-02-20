@@ -97,7 +97,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="ExtCS.dll.metagen" />
+    <None Include="ExtCS.exp" />
+    <None Include="ExtCS.lib" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ExtCS.Debugger.dll" />
+    <Content Include="ExtCS.Debugger.pdb" />
+    <Content Include="ExtCS.dll" />
+    <Content Include="ExtCS.pdb" />
+    <Content Include="Roslyn.Compilers.CSharp.dll" />
+    <Content Include="Roslyn.Compilers.CSharp.xml" />
+    <Content Include="Roslyn.Compilers.dll" />
+    <Content Include="Roslyn.Compilers.xml" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
