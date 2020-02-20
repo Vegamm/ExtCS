@@ -47,6 +47,8 @@ EXPORT void CALLBACK DebugExtensionUninitialize()
 	// gDebugControl4->CloseLogFile();
 }
 
+#pragma warning(disable:4793)
+
 // Prints to the debugger
 void DbgPrintf(const wchar_t* format, ...)
 {
@@ -59,6 +61,8 @@ void DbgPrintf(const wchar_t* format, ...)
 
 	OutputDebugStringW(buffer);
 }
+
+#pragma warning(default:4793)
 
 //this method calls into the managed code
 //script is the argument passed from the debugger
