@@ -1,31 +1,16 @@
-//
 // Contents of sosheap.csx
-//
 
-// References
-#r "ExtCS.Debugger.dll"
-#r "System.Data"
-#r "System.Xml"
+///
+/// Script Code
+///
 
-// Namespaces
-using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using ExtCS.Debugger;
-using System.Data;
-using System.Xml;
-using System.Text;
-
-/* Script Code! */
-
-// Get an instance of the debugger.
 var debugger = Debugger.GetCurrentDebugger();
 
-// Load SOS.dll
-var sos = new Extension("sos.dll");
+// Add extension path to search path
+//debugger.Execute(".extpath+\"C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\"");
 
-// Execute !DumpHeap from SOS
-var heapstat = sos.Call("!dumpheap -stat");
+// We must use the absolute path to load sos.
+var sos = new Extension("C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\sos.dll");
 
-// Print the output to the debugger.
-debugger.Output(heapstat);
+// Make sure to not use '!' for the method to execute on the extension.
+sos.CallExtensionMethod("dumpheap", "-stat");

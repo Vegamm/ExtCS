@@ -427,12 +427,11 @@ namespace ExtCS.Debugger
 			return hr;
 		}
 
-		public void InstallCustomHandler(OutputHandler currentHandler, out IntPtr previousCallbacks)
+		public void InstallCustomHandler(OutputHandler handler, out IntPtr previousCallbacks)
 		{
 			previousCallbacks = SavePreviousCallbacks();
-
-			IntPtr ThisIDebugOutputCallbacksPtr = Marshal.GetComInterfaceForObject(currentHandler, typeof(IDebugOutputCallbacks2));
-			int InstallationHRESULT = this.DebugClient.SetOutputCallbacks(ThisIDebugOutputCallbacksPtr);
+			IntPtr ptrDebugOutputCallbacks2 = Marshal.GetComInterfaceForObject(handler, typeof(IDebugOutputCallbacks2));
+			DebugClient.SetOutputCallbacks(ptrDebugOutputCallbacks2);
 		}
 
 		public bool Require(string extensionName)
@@ -510,8 +509,13 @@ namespace ExtCS.Debugger
 			OutputHelper(p, DEBUG_OUTPUT.VERBOSE);
 		}
 
+		/// <summary>
+		/// Flushes the DebugClient and gets the current OutputCallbacks on the DebugClient.
+		/// </summary>
+		/// <returns></returns>
 		private IntPtr SavePreviousCallbacks()
 		{
+			// TODO: Rename method to save CURRENT output callbacks.
 			IntPtr ptrPreviousCallbacks;
 			this.DebugClient.FlushCallbacks();
 
@@ -525,6 +529,7 @@ namespace ExtCS.Debugger
 		#endregion
 
 		#region Internal Methods
+
 		internal UInt64 GetExtensionHandle(string extensionName)
 		{
 			extensionName = extensionName.Trim().ToLower();

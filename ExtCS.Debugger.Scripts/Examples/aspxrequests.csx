@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 var sos=new Extension("sos.dll");
 string sMethodTable=sos.Call("!Name2EE System.Web.dll!System.Web.HttpContext");
-var rgMt=new System.Text.RegularExpressions.Regex(@"MethodTable:\W(?<methodtable>\S*)",System.Text.RegularExpressions.RegexOptions.Multiline);
+var rgMt=new Regex(@"MethodTable:\W(?<methodtable>\S*)",System.Text.RegularExpressions.RegexOptions.Multiline);
 var matches=rgMt.Match(sMethodTable);
 Dictionary<string,Dictionary<string,object>> outputData=new Dictionary<string,Dictionary<string,object>>();
 if(matches.Success)

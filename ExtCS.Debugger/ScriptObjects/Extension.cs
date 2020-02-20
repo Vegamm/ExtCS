@@ -9,7 +9,7 @@ namespace ExtCS.Debugger
 		#region Fields
 
 		const int S_OK = 0;
-		private OutputHandler outHandler = new OutputHandler();
+		private OutputHandler mOutputHandler = new OutputHandler();
 
 		#endregion
 
@@ -17,57 +17,57 @@ namespace ExtCS.Debugger
 
 		public Extension(string extensionName)
 		{
-			debugger = Debugger.GetCurrentDebugger();
+			ExtensionDebugger = Debugger.GetCurrentDebugger();
 
-			if (debugger is null)
+			if (ExtensionDebugger is null)
 			{
-				// failure
 				throw new Exception("No debugger available.");
 			}
 
-			extensionHandle = debugger.GetExtensionHandle(extensionName);
+			ExtensionHandle = ExtensionDebugger.GetExtensionHandle(extensionName);
 		}
 
 		#endregion
 
 		#region Properties
 
-		public ulong extensionHandle { get; set; }
+		public ulong ExtensionHandle { get; set; }
 
-		public unsafe Debugger debugger { get; set; }
+		public unsafe Debugger ExtensionDebugger { get; set; }
 
 		#endregion
 
 		#region Public Methods
 
-		public string Call(string commandname, params string[] args)
+		// This doesn't seem like a necessary method. Consider removing.
+		public string Call(string command, params string[] args)
 		{
 			//return CallExtensionMethod(commandname, CombineArgs(args));
-			return this.debugger.Execute(commandname + "" + CombineArgs(args));
+			return this.ExtensionDebugger.Execute(command + "" + CombineArgs(args));
+		}
+
+		public string CallExtensionMethod(string method, string args)
+		{
+			IntPtr ptrOriginalOutputHandler;
+			ExtensionDebugger.InstallCustomHandler(mOutputHandler, out ptrOriginalOutputHandler);
+
+			int hr = ExtensionDebugger.DebugControl.CallExtensionWide(ExtensionHandle, method, args);
+			if (hr != S_OK)
+			{
+				ExtensionDebugger.OutputError("unable to call extension method {0} with args {1}", method, args);
+				return null;
+			}
+
+			ExtensionDebugger.DebugClient.FlushCallbacks();
+			ExtensionDebugger.RevertCallBacks(ptrOriginalOutputHandler);
+
+			return mOutputHandler.ToString();
+
 		}
 
 		#endregion
 
 		#region Private Methods
-
-		private string CallExtensionMethod(string method, string args)
-		{
-			IntPtr previousHandler;
-			this.debugger.DebugClient.FlushCallbacks();
-			debugger.InstallCustomHandler(outHandler, out previousHandler);
-
-			int hr = debugger.DebugControl.CallExtensionWide(extensionHandle, method, args);
-			this.debugger.DebugClient.FlushCallbacks();
-			if (hr != S_OK)
-			{
-				debugger.OutputError("unable to call extension method {0} with args {1}", method, args);
-				return null;
-			}
-			debugger.RevertCallBacks(previousHandler);
-
-			return outHandler.ToString();
-
-		}
 
 		#endregion
 
@@ -115,7 +115,6 @@ namespace ExtCS.Debugger
 
 			return true;
 		}
-
 
 		#endregion
 

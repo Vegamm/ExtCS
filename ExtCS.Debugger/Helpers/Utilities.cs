@@ -16,6 +16,12 @@ namespace ExtCS.Debugger
 
 	public static class Utilities
 	{
+		#region Static Fields
+
+		public const string RETURN = "\r";
+		public const string NEW_LINE = "\n";
+
+		#endregion
 
 		#region Public Static Methods
 

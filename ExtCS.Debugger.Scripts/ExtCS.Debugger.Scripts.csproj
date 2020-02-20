@@ -44,18 +44,25 @@
     <Compile Include="Examples\aspxrequests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\ExtCS.Debugger\ExtCS.Debugger.csproj">
+      <Project>{9096a792-a155-4a83-899e-5f32a79a1978}</Project>
+      <Name>ExtCS.Debugger</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <None Include="Examples\aspxpages.csx" />
     <None Include="Examples\aspxrequests.csx" />
     <None Include="Examples\base.csx" />
     <None Include="Examples\Copy of showerrors.csx" />
     <None Include="Examples\DecompileStack.csx" />
+    <None Include="Pegasystems.Scripts\GetCommonConfig.csx" />
     <None Include="Examples\highCPURequests.csx" />
     <None Include="Examples\HighCPUThreads.csx" />
     <None Include="Examples\requests.csx" />
     <None Include="Examples\showerrors.csx" />
     <None Include="Examples\sosheap.csx" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

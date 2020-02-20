@@ -15,6 +15,7 @@ namespace ExtCS.Debugger
 
 		private static ManagedExtCS mManagedExtensionHost;
 
+		private static readonly Assembly SYSTEM_ASM = typeof(System.Environment).Assembly;
 		private static readonly Assembly SYSTEM_DIAGNOSTICS_DEBUG_ASM = typeof(System.Diagnostics.Debug).Assembly;
 		private static readonly Assembly SYSTEM_DYNAMIC_DYNAMICOBJECT_ASM = typeof(System.Dynamic.DynamicObject).Assembly;
 		private static readonly Assembly EXTCS_DEBUGGER_ASM = Assembly.GetExecutingAssembly();
@@ -348,18 +349,17 @@ namespace ExtCS.Debugger
 
 			var scriptEngine = new ScriptEngine();
 
+			//scriptEngine.SetReferenceSearchPaths(EXTCS_DEBUGGER_ASM.Location);
+			scriptEngine.AddReference(SYSTEM_ASM);
+			scriptEngine.AddReference(SYSTEM_DIAGNOSTICS_DEBUG_ASM);
+			scriptEngine.AddReference(SYSTEM_DYNAMIC_DYNAMICOBJECT_ASM);
+			scriptEngine.AddReference(EXTCS_DEBUGGER_ASM);
+
 			scriptEngine.ImportNamespace("System");
 			scriptEngine.ImportNamespace("System.Collections");
 			scriptEngine.ImportNamespace("System.Collections.Generic");
 			scriptEngine.ImportNamespace("System.Text");
 			scriptEngine.ImportNamespace("System.IO");
-
-			//scriptEngine.SetReferenceSearchPaths(EXTCS_DEBUGGER_ASM.Location);
-			scriptEngine.AddReference(SYSTEM_DIAGNOSTICS_DEBUG_ASM);
-			scriptEngine.AddReference(SYSTEM_DYNAMIC_DYNAMICOBJECT_ASM);
-			scriptEngine.AddReference(EXTCS_DEBUGGER_ASM);
-
-			// This can only be imported after the reference has been added.
 			scriptEngine.ImportNamespace("ExtCS.Debugger");
 
 			Session = scriptEngine.CreateSession(CSDebugger, CSDebugger.GetType());
