@@ -187,7 +187,7 @@ namespace ExtCS.Debugger
 			return Output;
 		}
 
-		public static string Execute(string args, IDebugClient debugClient, IDebugControl4 debugControl)
+		public static string Execute(string args, IDebugClient debugClient, IDebugControl4 debugControl, IDebugDataSpaces4 debugDataSpaces)
 		{
 
 			if (debugClient != null && CSDebugger == null)
@@ -196,7 +196,7 @@ namespace ExtCS.Debugger
 				//IDebugClient client;
 				//debugClient.CreateClient(out client);
 				ManagedDebugClient = debugClient;
-				CSDebugger = new Debugger(debugClient, debugControl);
+				CSDebugger = new Debugger(debugClient, debugControl, debugDataSpaces);
 			}
 
 			bool useExistingSession = true;

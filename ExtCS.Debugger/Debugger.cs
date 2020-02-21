@@ -43,6 +43,14 @@ namespace ExtCS.Debugger
 			sCurrent = this;
 		}
 
+		public Debugger(IDebugClient debugClient, IDebugControl4 debugControl, IDebugDataSpaces4 debugDataSpaces)
+		{
+			DebugClient = debugClient as IDebugClient5;
+			DebugControl = debugControl;
+			DebugDataSpaces = debugDataSpaces;
+			sCurrent = this;
+		}
+
 		public Debugger(IDebugClient debugClient, ScriptContext context)
 		{
 			DebugClient = debugClient as IDebugClient5;

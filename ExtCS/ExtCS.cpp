@@ -6,10 +6,11 @@ using namespace ExtCS::Debugger;
 using namespace System;
 using namespace System::Runtime::InteropServices; // Marshal
 
-IDebugAdvanced2*  gAdvancedDebug2=NULL;
-IDebugControl4*   gDebugControl4=NULL;
-IDebugControl*    gExecuteCmd=NULL;
-IDebugClient*     gDebugClient=NULL;
+IDebugAdvanced2*   gAdvancedDebug2 = NULL;
+IDebugControl4*    gDebugControl4 = NULL;
+IDebugControl*     gExecuteCmd = NULL;
+IDebugClient*      gDebugClient = NULL;
+IDebugDataSpaces4* gDebugDataSpaces4 = NULL;
 
 EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG Flags)
 {
@@ -23,6 +24,12 @@ EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG 
 	hr = gDebugClient->QueryInterface(__uuidof(IDebugControl4), (void **)&gDebugControl4); 
 	if (hr != S_OK) {
 		DbgPrintf(L"EXTCS: DebugExtensionInitialize failed to create DebugControl\n");
+		return E_FAIL;
+	}
+
+	hr = gDebugClient->QueryInterface(__uuidof(IDebugDataSpaces4), (void **)&gDebugDataSpaces4);
+	if (hr != S_OK) {
+		DbgPrintf(L"EXTCS: DebugExtensionInitialize failed to create DebugDataSpaces\n");
 		return E_FAIL;
 	}
 
@@ -73,7 +80,8 @@ HRESULT CallManagedCode(char * script)
 	 // Calling managed debugger
  	 ManagedExtCS::Execute(gcnew System::String(script), 
 		 (DotNetDbg::IDebugClient^)Marshal::GetObjectForIUnknown(IntPtr(gDebugClient)), 
-		 (DotNetDbg::IDebugControl4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugControl4)));
+		 (DotNetDbg::IDebugControl4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugControl4)),
+		 (DotNetDbg::IDebugDataSpaces4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugDataSpaces4)));
 	 
 	 // Clearing the global buffer of output callbacks
 	 // this is never used but for safer side, it is cleared.
