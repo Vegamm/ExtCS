@@ -10,7 +10,7 @@ If you want to automate the debugger but dislike the WinDbg built-in script ,now
 
 ### Supported Features
 
-- upports all the windows debugging tools (cdb.exe, ntsd.exe , windbg.exe etc.)
+- supports all the windows debugging tools (cdb.exe, ntsd.exe , windbg.exe etc.)
 - Visual Studio Editor support –Write your scripts in VS with intellisense goodness
 - Complete debugging support. Just give break point in the C# script and attach VS to windbg to do debugging.
 - Support for kernel mode debugging(still in early beta )

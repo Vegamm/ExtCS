@@ -1,26 +1,20 @@
 #include "ExtCS.h"
-//#include "dbgexts.h"
-#include <dbgeng.h>
 #include <msclr\auto_gcroot.h>
-
 
 
 using namespace ExtCS::Debugger;
 using namespace System;
 using namespace System::Runtime::InteropServices; // Marshal
 
-IDebugAdvanced2*  gAdvancedDebug2=NULL;
-
-IDebugControl4*   gDebugControl4=NULL;
-
-IDebugControl*    gExecuteCmd=NULL;
-
-IDebugClient*     gDebugClient=NULL;
+IDebugAdvanced2*   gAdvancedDebug2 = NULL;
+IDebugControl4*    gDebugControl4 = NULL;
+IDebugControl*     gExecuteCmd = NULL;
+IDebugClient*      gDebugClient = NULL;
+IDebugDataSpaces4* gDebugDataSpaces4 = NULL;
 
 EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG Flags)
 {
 	HRESULT hr = S_OK; 
-	//IDebugClient* pDebugClient; 
 	hr = DebugCreate(__uuidof(IDebugClient), (void **)&gDebugClient); 
 	if (hr != S_OK) {
 		DbgPrintf(L"EXTCS: DebugExtensionInitialize failed to create DebugClient\n");
@@ -33,20 +27,27 @@ EXPORT HRESULT CALLBACK DebugExtensionInitialize(OUT PULONG Version, OUT PULONG 
 		return E_FAIL;
 	}
 
+	hr = gDebugClient->QueryInterface(__uuidof(IDebugDataSpaces4), (void **)&gDebugDataSpaces4);
+	if (hr != S_OK) {
+		DbgPrintf(L"EXTCS: DebugExtensionInitialize failed to create DebugDataSpaces\n");
+		return E_FAIL;
+	}
+
 	*Version = DEBUG_EXTENSION_VERSION(MAJOR_VERSION, MINOR_VERSION);
 	*Flags = 0;
 
 	return hr;
-
 }
 
+// Called on unload.
 EXPORT void CALLBACK DebugExtensionUninitialize()
 {
 	DbgPrintf(L"EXTCS: DebugExtensionUninitialize\n");
-
 }
-//printing to the deugger
-//not used but it is defined anyway.
+
+#pragma warning(disable:4793)
+
+// Prints to the debugger
 void DbgPrintf(const wchar_t* format, ...)
 {
 	wchar_t buffer[1024];
@@ -59,19 +60,27 @@ void DbgPrintf(const wchar_t* format, ...)
 	OutputDebugStringW(buffer);
 }
 
-//this method calls into the managed code
-//scrip is the argument passed from the debugger
+#pragma warning(default:4793)
+
+// This method calls into the managed code
+// script is the argument passed from the debugger
 HRESULT CallManagedCode(char * script)
 {
-	//calling into managed debugger
- 	 ExtCS::Debugger::ManagedExtCS::Execute(gcnew System::String(script), (DotNetDbg::IDebugClient^)Marshal::GetObjectForIUnknown(IntPtr(gDebugClient)));
-	 //clearing the global buffer of outputcallbacks
-	 //this is never used.but for safer side,it is cleared.
-	 //inisdemanged code,always a new outpucallbacl is installed to debugclient.
+	 // Calling managed debugger
+ 	 ManagedExtCS::Execute(gcnew System::String(script), 
+		 (DotNetDbg::IDebugClient^)Marshal::GetObjectForIUnknown(IntPtr(gDebugClient)), 
+		 (DotNetDbg::IDebugControl4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugControl4)),
+		 (DotNetDbg::IDebugDataSpaces4^)Marshal::GetObjectForIUnknown(IntPtr(gDebugDataSpaces4)));
+	 
+	 // TODO: Investigate if g_OutputCb can be removed.
+
+	 // Clearing the global buffer of output callbacks
+	 // this is never used but for safer side, it is cleared.
+	 // in managed code, always a new output callback is installed to debugclient.
 	 g_OutputCb.ClearOutPutBuffer();
 	 return NULL;
-
 }
+
 //calling the MACRO to define execute method
 DECLARE_API(execute)
 //declaring the alias
@@ -86,8 +95,8 @@ HRESULT help(IDebugClient* debugClient, PCSTR args)
 	{
 		char result[100];   // array to hold the result.
 
-		strcpy(result,sHelp); // copy string one into the result.
-		strcat(result,args); // append string two to the result.	
+		strcpy_s(result,sHelp); // copy string one into the result.
+		strcat_s(result,args); // append string two to the result.	
 		helpargs=result;
 	}
 	else
@@ -96,12 +105,12 @@ HRESULT help(IDebugClient* debugClient, PCSTR args)
 	return CallManagedCode(helpargs);
 }
 
-
 HRESULT clearscriptsession(IDebugClient* debugClient, PCSTR args)
 {
 	//passing a space after the -clear is important for the paramter regex  to parse the argument
 	return CallManagedCode(" -clear ");
 }
+
 HRESULT debug(IDebugClient* debugClient, PCSTR args)
 {
 	//passing a space after the -clear is important for the paramter regex  to parse the argument

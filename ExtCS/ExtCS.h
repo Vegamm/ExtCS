@@ -1,10 +1,8 @@
-
 #include <windows.h>
 #include <dbgeng.h>
 #include <imagehlp.h>
 
 //#define DBG_COMMAND_EXCEPTION ( (DWORD)0x40010009L)
-
 
 #include <strsafe.h>
 
@@ -17,7 +15,6 @@
 #define __OUT_HPP__
 
 #include <string>
-
 #include <sstream>
 
 #define EXPORT extern "C"
@@ -26,71 +23,47 @@
 class StdioOutputCallbacks : public IDebugOutputCallbacks
 {
 private:
+	std::string m_OutputBuffer;
 
-                        std::string m_OutputBuffer;
-
-                        //
-
-                        //This buffer holds the output from the command execution.
-
-                        //
-
-                        CHAR m_OutPutBuffer[4096];
+	//
+	//This buffer holds the output from the command execution.
+	//
+	CHAR m_OutPutBuffer[4096];
 
 public:
+	void InitOutPutBuffer();
 
-                        void InitOutPutBuffer();
+	std::string GetOutputBuffer()
+	{
+		return m_OutputBuffer;
+	};
 
-                        std::string GetOutputBuffer()
+	void ClearOutPutBuffer()
+	{
+		m_OutputBuffer = "";
+	};
 
-                        {
+	STDMETHOD(QueryInterface)(
+		THIS_
+		IN REFIID InterfaceId,
+		OUT PVOID* Interface
+		);
 
-                                                return m_OutputBuffer;
+	STDMETHOD_(ULONG, AddRef)(
+		THIS
+		);
 
-                        };
+	STDMETHOD_(ULONG, Release)(
+		THIS
+		);
 
-                        void ClearOutPutBuffer()              
+	// IDebugOutputCallbacks.
 
-                        {
-
-                                                m_OutputBuffer = "";
-
-                        };
-
-    STDMETHOD(QueryInterface)(
-
-        THIS_
-
-        IN REFIID InterfaceId,
-
-        OUT PVOID* Interface
-
-        );
-
-    STDMETHOD_(ULONG, AddRef)(
-
-        THIS
-
-        );
-
-    STDMETHOD_(ULONG, Release)(
-
-        THIS
-
-        );
-
-    // IDebugOutputCallbacks.
-
-    STDMETHOD(Output)(
-
-        THIS_
-
-        IN ULONG Mask,
-
-        IN PCSTR Text
-
-        );
-
+	STDMETHOD(Output)(
+		THIS_
+		IN ULONG Mask,
+		IN PCSTR Text
+		);
 };
 
 extern StdioOutputCallbacks g_OutputCb;
@@ -102,13 +75,12 @@ extern "C" HRESULT help(IDebugClient* debugClient, PCSTR args);
 extern "C" HRESULT clearscriptsession(IDebugClient* debugClient, PCSTR args);
 extern "C" HRESULT debug(IDebugClient* debugClient, PCSTR args);
 
-#define DECLARE_API(extensionName)                                        \
+#define DECLARE_API(extensionName)                                           \
 BSTR bstr_##extensionName = SysAllocString(L#extensionName);                 \
 EXPORT HRESULT CALLBACK extensionName(IDebugClient* debugClient, PCSTR args) \
 {                                                                            \
-	return CallManagedCode((char *)args);                                       \
+	return CallManagedCode((char *)args);                                    \
 }
 
 
 void DbgPrintf(const wchar_t* format, ...);
-
