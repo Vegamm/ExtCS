@@ -168,26 +168,6 @@ namespace ExtCS.Debugger
 			return output;
 		}
 
-		/// <summary>
-		/// Returns true if a HRESULT indicates failure.
-		/// </summary>
-		/// <param name="hr">HRESULT</param>
-		/// <returns>True if hr indicates failure</returns>
-		public static bool FAILED(int hr)
-		{
-			return (hr < 0);
-		}
-
-		/// <summary>
-		/// Returns true if a HRESULT indicates success.
-		/// </summary>
-		/// <param name="hr">HRESULT</param>
-		/// <returns>True if hr indicates success</returns>
-		public static bool SUCCEEDED(int hr)
-		{
-			return (hr >= 0);
-		}
-
 		public void OutputDebugInfo(string format, params object[] args)
 		{
 			if (this.Context.Debug)
@@ -243,99 +223,72 @@ namespace ExtCS.Debugger
 		public int GetString(UInt64 address, UInt32 maxSize, out string output)
 		{
 			return GetUnicodeString(address, maxSize, out output);
-			//StringBuilder sb = new StringBuilder((int)maxSize + 1);
-			//uint bytesRead;
-			//int hr = DebugDataSpaces.ReadMultiByteStringVirtual(address, maxSize, sb, maxSize, &bytesRead);
-			//if (SUCCEEDED(hr))
-			//{
-			//    if (bytesRead > maxSize)
-			//    {
-			//        sb.Length = (int)maxSize;
-			//    }
-			//    output = sb.ToString();
-			//}
-			//else
-			//{
-			//    output = null;
-			//}
-			//return hr;
 		}
 
-		public UInt64 POI(object address)
+		public UInt64 POI(string address)
 		{
-			return ReadPointer(address.ToString());
-		}
+			UInt64 addr;
+			if (UInt64.TryParse(address, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out addr))
+			{
+				return ReadPointer(addr);
+			}
 
-		public UInt64 POI(object address, object offset)
-		{
-			return ReadPointer(address.ToString(), offset.ToString());
+			throw new Exception($"Unable to convert address: {address}");
 		}
 
 		/// <summary>
-		/// Reads a single pointer from the target.
-		/// NOTE: POINTER VALUE IS SIGN EXTENDED TO 64-BITS WHEN NECESSARY!
+		/// 
 		/// </summary>
-		/// <param name="offset">The address to read the pointer from</param>
-		/// <returns>The pointer</returns>
-		public UInt64 ReadPointer(string offset)
+		/// <remarks>UInt64 is interchangeable with ulong</remarks>
+		/// <param name="address"></param>
+		/// <returns></returns>
+		public UInt64 POI(UInt64 address)
 		{
-			UInt64 address;
-
-			if (UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out address))
-			{
-				return ReadPointer(address);
-			}
-
-			throw new Exception("unable to convert address " + offset);
+			return ReadPointer(address);
 		}
 
-		public UInt64 ReadPointer(string objAddress, string offset)
+		public UInt64 POI(string address, string offset)
 		{
-			UInt64 address, off;
-
-			if (!UInt64.TryParse(objAddress, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out address))
+			UInt64 addr;
+			if (UInt64.TryParse(address, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out addr) == false)
 			{
-				throw new Exception($"unable to convert address {objAddress}");
+				throw new Exception($"Unable to convert address: {address}");
 			}
 
-			if (!UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out off))
+			UInt64 offs;
+			if (UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out offs) == false)
 			{
-				throw new Exception($"unable to convert address {offset}");
+				throw new Exception($"Unable to convert offset: {offset}");
 			}
 
-			return ReadPointer(address + off);
+			return ReadPointer(addr + offs);
 		}
 
-		public UInt64 ReadPointer(UInt64 objAddress, string offset)
+		public UInt64 POI(string address, UInt64 offset)
 		{
-			UInt64 off;
-			if (!UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out off))
+			UInt64 addr;
+			if (UInt64.TryParse(address, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out addr) == false)
 			{
-				throw new Exception("unable to convert address " + offset);
+				throw new Exception($"Unable to convert address: {address}");
 			}
 
-			return ReadPointer(objAddress + off);
+			return ReadPointer(addr + offset);
 		}
 
-		public UInt64 ReadPointer(UInt64 objAddress, UInt64 offset)
+		public UInt64 POI(UInt64 address, UInt64 offset)
 		{
-			return ReadPointer(objAddress + offset);
+			return ReadPointer(address + offset);
 		}
 
-		/// <summary>
-		/// Reads a single pointer from the target.
-		/// NOTE: POINTER VALUE IS SIGN EXTENDED TO 64-BITS WHEN NECESSARY!
-		/// </summary>
-		/// <param name="offset">The address to read the pointer from</param>
-		/// <returns>The pointer</returns>
-		public UInt64 ReadPointer(UInt64 offset)
+		public UInt64 POI(UInt64 address, string offset)
 		{
-			UInt64[] pointerArray = new UInt64[1];
-			int hr = DebugDataSpaces.ReadPointersVirtual(1, offset, pointerArray);
-			if (FAILED(hr))
-				ThrowExceptionHere(hr);
+			UInt64 offs;
+			if (UInt64.TryParse(offset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out offs) == false)
+			{
+				throw new Exception($"Unable to convert offset: {offset}");
+			}
 
-			return pointerArray[0];
+			return ReadPointer(address + offs);
 		}
 
 		/// <summary>
@@ -481,6 +434,30 @@ namespace ExtCS.Debugger
 
 		#endregion
 
+		#region Public Static Methods
+
+		/// <summary>
+		/// Returns true if a HRESULT indicates failure.
+		/// </summary>
+		/// <param name="hr">HRESULT</param>
+		/// <returns>True if hr indicates failure</returns>
+		public static bool FAILED(int hr)
+		{
+			return (hr < 0);
+		}
+
+		/// <summary>
+		/// Returns true if a HRESULT indicates success.
+		/// </summary>
+		/// <param name="hr">HRESULT</param>
+		/// <returns>True if hr indicates success</returns>
+		public static bool SUCCEEDED(int hr)
+		{
+			return (hr >= 0);
+		}
+
+		#endregion
+
 		#region Private Methods
 
 		/// <summary>
@@ -534,6 +511,22 @@ namespace ExtCS.Debugger
 			return ptrPreviousCallbacks;
 		}
 
+		/// <summary>
+		/// Reads a single pointer from the target.
+		/// NOTE: POINTER VALUE IS SIGN EXTENDED TO 64-BITS WHEN NECESSARY!
+		/// </summary>
+		/// <param name="offset">The address to read the pointer from</param>
+		/// <returns>The pointer</returns>
+		private UInt64 ReadPointer(UInt64 offset)
+		{
+			UInt64[] pointerArray = new UInt64[1];
+			int hr = DebugDataSpaces.ReadPointersVirtual(1, offset, pointerArray);
+			if (FAILED(hr))
+				ThrowExceptionHere(hr);
+
+			return pointerArray[0];
+		}
+
 		#endregion
 
 		#region Internal Methods
@@ -552,8 +545,7 @@ namespace ExtCS.Debugger
 			}
 		}
 
-		//public OutputHandler sOutHandler { get { return sOutHandler; } set { if(sOutHandler!=null) sOutHandler = value; } }
-
+		// TODO: Implement OutputError.
 		internal void OutputError(string p, string method, string args)
 		{
 			throw new NotImplementedException();
@@ -569,6 +561,7 @@ namespace ExtCS.Debugger
 			System.Diagnostics.StackFrame stackFrame = stackTrace.GetFrame(1);
 			throw new Exception(String.Format("Error in {0}: {1}", stackFrame.GetMethod().Name, hr));
 		}
+
 		#endregion 
 	}
 }

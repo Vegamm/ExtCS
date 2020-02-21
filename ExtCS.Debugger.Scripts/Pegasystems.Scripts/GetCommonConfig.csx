@@ -40,45 +40,19 @@ foreach (Match match in matches)
 // Calculate the first pointer!
 string manifestOffset = "4";
 
-ulong addr;
-UInt64.TryParse(address, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out addr);
-debugger.Output(Utilities.NEW_LINE + "addr: " + addr.ToString());
-
-ulong offset;
-UInt64.TryParse(manifestOffset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out offset);
-debugger.Output(Utilities.NEW_LINE + "offset: " + offset.ToString());
-
-ulong result = addr + offset;
-debugger.Output(Utilities.NEW_LINE + "result: " + result.ToString("X"));
-
-UInt64 manifest = Convert.ToUInt64(result);
-UInt64 destAddress = debugger.ReadPointer(manifest);
-
-string dest = destAddress.ToString("X");
-debugger.Output(Utilities.NEW_LINE + "address to -> " + dest + Utilities.NEW_LINE);
+UInt64 dereferencedAddress = debugger.POI(address, manifestOffset);
+string addressToManifest = dereferencedAddress.ToString("X");
+debugger.Output($"{Environment.NewLine} address dereferenced to -> {addressToManifest}{Environment.NewLine}");
 
 // Calculate the second pointer!
 string manifestDocumentOffset = "10";
 
-ulong addr1;
-UInt64.TryParse(dest, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out addr1);
-debugger.Output(Utilities.NEW_LINE + "addr1: " + addr1.ToString());
-
-ulong offset1;
-UInt64.TryParse(manifestDocumentOffset, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out offset1);
-debugger.Output(Utilities.NEW_LINE + "offset1: " + offset1.ToString());
-
-ulong result1 = addr1 + offset1;
-debugger.Output(Utilities.NEW_LINE + "result1: " + result1.ToString("X"));
-
-UInt64 manifest1 = Convert.ToUInt64(result1);
-UInt64 destAddress1 = debugger.ReadPointer(manifest1);
-
-string commonConfig = destAddress1.ToString("X");
-debugger.Output(Utilities.NEW_LINE + "address1 to -> " + commonConfig + Utilities.NEW_LINE);
+dereferencedAddress = debugger.POI(addressToManifest, manifestDocumentOffset);
+string addressToDocument = dereferencedAddress.ToString("X");
+debugger.Output($"{Environment.NewLine} address dereferenced to -> {addressToDocument}{Environment.NewLine}");
 
 // Execute !wxml {address}
-string document = netext.CallExtensionMethod("wxml", commonConfig);
+string document = netext.CallExtensionMethod("wxml", addressToDocument);
 
 // Save the output to a file
 document = WebUtility.HtmlDecode(document);

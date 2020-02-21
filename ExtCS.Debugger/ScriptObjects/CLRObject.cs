@@ -211,7 +211,7 @@ namespace ExtCS.Debugger
 			if (mIsPointer)
 			{
 				Debugger.GetCurrentDebugger().OutputDebugInfo("Reading pointer of CLRObject's {2} with name: {1} and offset:{0}\n", mOffset, Type, Name);
-				mAddress = new Address(Debugger.GetCurrentDebugger().ReadPointer(mOffset));
+				mAddress = new Address(Debugger.GetCurrentDebugger().POI(mOffset));
 				mIsPointer = false;
 			}
 		}
