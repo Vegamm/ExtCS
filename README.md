@@ -1,48 +1,41 @@
-## EXTCS - c# extension to access windows debugengine
+## EXTCS - C# Extension to access windows Debug Engine
 =====
 
 ### Purpose
 
-This extension allows you to write C# scripts against windbg(or other debugging tools like cdb.exe ntsd.exe etc). With the help of this extension, Now you can write windbg scripts in C# utilizing the vast array of .net libraries available
+This extension allows you to write C# scripts against windbg (or other debugging tools like cdb.exe, ntsd.exe, etc). With the help of this extension, you can write windbg scripts in C# utilizing the vast array of .NET libraries available.
+
 Why do I need this?
 
-If you want to automate the debugger but dislike the WinDbg built-in script ,now you can use C# language and all the framework librarires. Even if you don't want to create your own script, maybe some existing scripts will be of interest to you?
+If you want to automate the debugger but dislike the WinDbg built-in scripting, now you can use C# language and all the framework libraries. Even if you don't want to create your own script, maybe some existing scripts will be of interest to you.
 
 ### Supported Features
 
-- supports all the windows debugging tools (cdb.exe, ntsd.exe , windbg.exe etc.)
-- Visual Studio Editor support –Write your scripts in VS with intellisense goodness
-- Complete debugging support. Just give break point in the C# script and attach VS to windbg to do debugging.
-- Support for kernel mode debugging(still in early beta )
-- REPL support –You can use your debugger to execute C# statements write on the command window
-- support for 32bit and 64 bit .Scripts require very minimal change or no change at all to run on 32 or 64 bit dumps
+- Full intellisense support on Visual Studio Code when writing scripts and partial support in Visual Studio.
+- Supports all the windows debugging tools that utilize the debug engine.
+- Complete debugging support. Add a breakpoint in the C# script and attach Visual Studio to windbg to do debugging.
+- REPL support – You can use your debugger to execute C# statements directly in the command window.
 
 ### Quick start
 
-* Install debugging tools http://msdn.microsoft.com/en-us/library/windows/hardware/gg463009.aspx
-* Install Visual C++ 2012 resitributable http://www.microsoft.com/en-us/download/details.aspx?id=30679
-* Download and extract the extension dlls to windbg directory ExtCS 0.5 Beta
-* Load extension in WinDbg: .load extcs
-*Execute the script: !execute -file c:\scripts\aspxpages.csx
+* Install Debugging Tools for Windows 10 - https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools
+* Download and extract the extension dlls to WinDbg directory.
+* Load the extension in WinDbg with the following command: .load extcs
+* Now try executing a script: !execute -file HelloWorld.csx
 
-Here’s another simple example of what this extension does:
+Here’s a simple example of a script that is executed with the extension:
 
-!execute –file c:\scripts\heapstat.csx
+!execute –file sosheap.csx
 
 ```cs
-//contents of heapstat.csx
-#r "C:\Program Files\Debugging Tools for Windows (x64)\ExtCS.Debugger.dll"
-#r "System.Data"
-#r "System.Xml"
-using System;
-using ExtCS.Debugger;
+/// Contents of sosheap.csx
 
-var d = Debugger.Current;
-//load the sos.dll
-var sos=new Extension("sos.dll");
-//call the command on sos.dll and get tehe output to variable heapstat
-var heapstat=sos.Call("!dumpheap -stat");
-//output heapstat to debugger
-d.Output(heapstat);
+// Get an instance of the debugger.
+var debugger = Debugger.GetCurrentDebugger();
 
-'''
+// Load sos
+var sos = new Extension("C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\sos.dll");
+
+// Call '!dumpheap -stat' on sos
+sos.CallExtensionMethod("dumpheap", "-stat");
+```
