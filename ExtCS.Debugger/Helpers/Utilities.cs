@@ -103,8 +103,8 @@ namespace ExtCS.Debugger
 		{
 			var d = Debugger.GetCurrentDebugger();
 			var sos = new Extension("sos.dll");
-			string sMethodTable = sos.Call("!Name2EE " + type);
-			var rgMt = new System.Text.RegularExpressions.Regex(@"MethodTable:\W(?<methodtable>\S*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+			string sMethodTable = sos.CallExtensionMethod("Name2EE", type);
+			var rgMt = new Regex(@"MethodTable:\W(?<methodtable>\S*)", System.Text.RegularExpressions.RegexOptions.Multiline);
 			var matches = rgMt.Match(sMethodTable);
 
 			if (matches.Success)

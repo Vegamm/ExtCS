@@ -15,7 +15,7 @@ namespace ExtCS.Debugger
 
 		#region Constructors
 
-		public Extension(string extensionName)
+		public Extension(string extensionFilePath)
 		{
 			ExtensionDebugger = Debugger.GetCurrentDebugger();
 
@@ -24,7 +24,17 @@ namespace ExtCS.Debugger
 				throw new Exception("No debugger available.");
 			}
 
-			ExtensionHandle = ExtensionDebugger.GetExtensionHandle(extensionName);
+            ulong extensionHandle;
+            int hr = ExtensionDebugger.DebugControl.AddExtension(extensionFilePath, 0, out extensionHandle);
+            if (hr == S_OK)
+            {
+                ExtensionHandle = extensionHandle;
+                Extension.ExtensionLoadedEvent(this, new ExtensionLoadedEventArgs(extensionFilePath));
+            }
+            else
+            {
+                throw new Exception($"Failed to load extension with path: {extensionFilePath}");
+            }
 		}
 
 		#endregion
@@ -39,30 +49,26 @@ namespace ExtCS.Debugger
 
 		#region Public Methods
 
-		// This doesn't seem like a necessary method. Consider removing.
-		public string Call(string command, params string[] args)
-		{
-			//return CallExtensionMethod(commandname, CombineArgs(args));
-			return this.ExtensionDebugger.Execute(command + "" + CombineArgs(args));
-		}
-
 		public string CallExtensionMethod(string method, string args)
 		{
 			IntPtr ptrOriginalOutputHandler;
 			ExtensionDebugger.InstallCustomHandler(mOutputHandler, out ptrOriginalOutputHandler);
 
+            if (method.StartsWith("!"))
+            {
+                method = method.TrimStart('!');
+            }
+
 			int hr = ExtensionDebugger.DebugControl.CallExtensionWide(ExtensionHandle, method, args);
 			if (hr != S_OK)
 			{
-				ExtensionDebugger.OutputError("unable to call extension method {0} with args {1}", method, args);
+				ExtensionDebugger.Output($"Unable to call extension method [{method}] with args [{args}]");
 				return null;
 			}
 
-			ExtensionDebugger.DebugClient.FlushCallbacks();
 			ExtensionDebugger.RevertCallBacks(ptrOriginalOutputHandler);
 
 			return mOutputHandler.ToString();
-
 		}
 
 		#endregion
@@ -116,7 +122,25 @@ namespace ExtCS.Debugger
 			return true;
 		}
 
-		#endregion
+        #endregion
 
-	}
+        #region Events
+
+        public delegate void ExtensionLoaded(Extension extension, ExtensionLoadedEventArgs args);
+
+        public static event ExtensionLoaded ExtensionLoadedEvent;
+
+        public class ExtensionLoadedEventArgs : EventArgs
+        {
+            public ExtensionLoadedEventArgs(string extensionName)
+            {
+                ExtensionFilePath = extensionName;
+            }
+
+            public string ExtensionFilePath { get; set; }
+        }
+
+        #endregion
+
+    }
 }

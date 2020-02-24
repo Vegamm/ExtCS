@@ -199,7 +199,7 @@ namespace ExtCS.Debugger
 					mSOSExtension = new Extension("sos.dll");
 
 				InitIfPointer();
-				mDumpObjOutput = mSOSExtension.Call("!do", mAddress.ToHex());
+				mDumpObjOutput = mSOSExtension.CallExtensionMethod("do", mAddress.ToHex());
 				mProperties = mDumpObjOutput.Split('\n', '\r');
 				mInitialized = true;
 				Name = string.Empty;

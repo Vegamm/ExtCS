@@ -12,10 +12,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ExtCS.Debugger;
 
-///
-/// Script Code
-///
-
 Debugger debugger = Debugger.GetCurrentDebugger();
 
 // Load extensions
