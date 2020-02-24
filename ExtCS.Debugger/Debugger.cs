@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using DotNetDbg;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+
+using DotNetDbg;
 
 namespace ExtCS.Debugger
 {
@@ -13,7 +14,6 @@ namespace ExtCS.Debugger
     {
         #region Fields
 
-        const int S_OK = 0;
         const int E_FAIL = unchecked((int)0x80004005);
         const int ERROR_INVALID_PARAMETER = unchecked((int)0x80070057);
 
@@ -311,7 +311,7 @@ namespace ExtCS.Debugger
         /// <returns>True if 64-bit, otherwise false</returns>
         public bool IsPointer64Bit()
         {
-            return (DebugControl.IsPointer64Bit() == S_OK);
+            return (DebugControl.IsPointer64Bit() == (int)HRESULT.S_OK);
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace ExtCS.Debugger
                 throw new ArgumentNullException("Extension file path cannot be null.");
             }
 
-            extensionFilePath = extensionFilePath.ToLower();
+            extensionFilePath = extensionFilePath.ToLowerInvariant();
             string extensionName = Path.GetFileNameWithoutExtension(extensionFilePath);
             if (sLoadedExtensions.ContainsKey(extensionName))
             {
@@ -551,7 +551,7 @@ namespace ExtCS.Debugger
         /// <param name="extensionName">The name of the extension to retrieve</param>
         internal Extension GetExtension(string extensionName)
         {
-            extensionName = extensionName.ToLower();
+            extensionName = extensionName.ToLowerInvariant();
             extensionName = Path.GetFileNameWithoutExtension(extensionName);
             if (sLoadedExtensions.ContainsKey(extensionName))
             {
@@ -589,7 +589,7 @@ namespace ExtCS.Debugger
                 return;
             }
 
-            extensionFilePath = extensionFilePath.ToLower();
+            extensionFilePath = extensionFilePath.ToLowerInvariant();
             string extensionName = Path.GetFileNameWithoutExtension(extensionFilePath);
             if (sLoadedExtensions.ContainsKey(extensionName) == false)
             {

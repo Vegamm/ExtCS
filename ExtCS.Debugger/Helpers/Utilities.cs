@@ -43,12 +43,14 @@ namespace ExtCS.Debugger
 			Match match = regex.Match(clr);
 
 			DllVersionInfo ver;
-			if (!match.Success)
+			if (match.Success == false)
 			{
 				var mscorwks = debugger.Execute("lmvm mscorwks");
 				match = regex.Match(mscorwks);
-				if (!match.Success)
-					throw new Exception("unable to find mscorwks or clr dll");
+				if (match.Success == false)
+                {
+                    throw new Exception("unable to find mscorwks or clr dll");
+                }
 			}
 
 			ver = new DllVersionInfo()
@@ -88,10 +90,10 @@ namespace ExtCS.Debugger
 		/// </summary>
 		/// <param name="strData"></param>
 		/// <returns></returns>
-		public static string[] GetLines(this string strData)
+		public static string[] GetLines(this string text)
 		{
-			string[] linefeed = new string[] { "\n", "\r\n", "\r" };
-			return strData.Split(linefeed, StringSplitOptions.RemoveEmptyEntries);
+			string[] lineSeparators = new string[] { "\n", "\r\n", "\r" };
+			return text.Split(lineSeparators, StringSplitOptions.RemoveEmptyEntries);
 		}
 
 		/// <summary>
@@ -101,18 +103,17 @@ namespace ExtCS.Debugger
 		/// <returns>Method table</returns>
 		public static string GetMT(string type)
 		{
-			var d = Debugger.GetCurrentDebugger();
-			var sos = new Extension("sos.dll");
+			Extension sos = new Extension("sos.dll");
 			string sMethodTable = sos.CallExtensionMethod("Name2EE", type);
-			var rgMt = new Regex(@"MethodTable:\W(?<methodtable>\S*)", System.Text.RegularExpressions.RegexOptions.Multiline);
-			var matches = rgMt.Match(sMethodTable);
+			Regex regex = new Regex(@"MethodTable:\W(?<methodtable>\S*)", RegexOptions.Multiline);
+			var matches = regex.Match(sMethodTable);
 
 			if (matches.Success)
+            {
+                return matches.Groups["methodtable"].Value;
+            }
 
-				//debugger.Output("matched");
-				return matches.Groups["methodtable"].Value;
-
-			throw new Exception("unable to get Method table of HttpContext\n");
+			throw new Exception($"Unable to get Method Table of {type}\n");
 
 		}
 
@@ -127,7 +128,7 @@ namespace ExtCS.Debugger
 
 		public static string GetPaddedString(char ch, int count)
 		{
-			Char[] strReturn = new char[count];
+			char[] strReturn = new char[count];
 			for (int i = 0; i < count; i++)
 			{
 				strReturn[i] = ch;
@@ -143,7 +144,6 @@ namespace ExtCS.Debugger
 		public static string[] GetColumnPadStrings(DataRow currentRow, int[] columnPaddings)
 		{
 			string[] rowPaddings = new string[columnPaddings.Length];
-
 			for (int cCount = 0; cCount < columnPaddings.Length; cCount++)
 			{
 				rowPaddings[cCount] = GetPaddedString(' ', (columnPaddings[cCount] - currentRow[cCount].ToString().Length) + 2);
@@ -155,7 +155,6 @@ namespace ExtCS.Debugger
 		public static string[] GetHeaderPadStrings(DataTable table, int[] columnPaddings)
 		{
 			string[] rowPaddings = new string[columnPaddings.Length];
-
 			for (int cCount = 0; cCount < columnPaddings.Length; cCount++)
 			{
 				rowPaddings[cCount] = GetPaddedString(' ', (columnPaddings[cCount] - table.Columns[cCount].ColumnName.Length) + 2);
@@ -222,21 +221,6 @@ namespace ExtCS.Debugger
 			}
 
 			return stbTable.ToString();
-			//for (int i = 0; i < columnEndPaddings.Length; i++)
-			//{
-			//	paddedstrings[i] = GetPaddedString(' ', columnEndPaddings[i]);
-			//}
-			//StringBuilder stbFinalTableFormat = new StringBuilder(columnEndPaddings.Length);
-
-			//stbFinalTableFormat.Append(stbColumnFormat.ToString()).AppendLine();
-
-			//foreach(string rowstring in lstRows)
-			//{
-			//	//rowstring =rowstring+GetPaddedString
-			//       stbFinalTableFormat.Append(rowstring).AppendLine();
-			//}
-
-			//return string.Format(stbFinalTableFormat.ToString(), paddedstrings);
 		}
 
 		public static string GetFormattedString(this DataTable table)

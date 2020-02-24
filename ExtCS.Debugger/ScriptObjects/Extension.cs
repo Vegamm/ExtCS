@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Dynamic;
 
+using DotNetDbg;
+
 namespace ExtCS.Debugger
 {
    public class Extension : DynamicObject
@@ -8,13 +10,17 @@ namespace ExtCS.Debugger
 
 		#region Fields
 
-		const int S_OK = 0;
 		private OutputHandler mOutputHandler = new OutputHandler();
 
 		#endregion
 
 		#region Constructors
 
+        /// <summary>
+        /// Gets an instance of the debugger and attempts to load the extension
+        /// from the provided path.
+        /// </summary>
+        /// <param name="extensionFilePath">Path to the extension.</param>
 		public Extension(string extensionFilePath)
 		{
 			ExtensionDebugger = Debugger.GetCurrentDebugger();
@@ -24,9 +30,11 @@ namespace ExtCS.Debugger
 				throw new Exception("No debugger available.");
 			}
 
+            // If the extension has already been loaded,
+            // the existing extension handle is returned.
             ulong extensionHandle;
             int hr = ExtensionDebugger.DebugControl.AddExtension(extensionFilePath, 0, out extensionHandle);
-            if (hr == S_OK)
+            if (hr == (int)HRESULT.S_OK)
             {
                 ExtensionHandle = extensionHandle;
                 Extension.ExtensionLoadedEvent(this, new ExtensionLoadedEventArgs(extensionFilePath));
@@ -60,7 +68,7 @@ namespace ExtCS.Debugger
             }
 
 			int hr = ExtensionDebugger.DebugControl.CallExtensionWide(ExtensionHandle, method, args);
-			if (hr != S_OK)
+			if (hr != (int)HRESULT.S_OK)
 			{
 				ExtensionDebugger.Output($"Unable to call extension method [{method}] with args [{args}]");
 				return null;
@@ -132,12 +140,12 @@ namespace ExtCS.Debugger
 
         public class ExtensionLoadedEventArgs : EventArgs
         {
-            public ExtensionLoadedEventArgs(string extensionName)
+            public ExtensionLoadedEventArgs(string extensionFilePath)
             {
-                ExtensionFilePath = extensionName;
+                ExtensionFilePath = extensionFilePath;
             }
 
-            public string ExtensionFilePath { get; set; }
+            public string ExtensionFilePath { get; }
         }
 
         #endregion
