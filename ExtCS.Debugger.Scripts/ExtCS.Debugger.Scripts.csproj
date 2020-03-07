@@ -62,6 +62,8 @@
     <None Include="Examples\showerrors.csx" />
     <None Include="Examples\sosheap.csx" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Pegasystems.Scripts\FindAddressWithType.csx" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
