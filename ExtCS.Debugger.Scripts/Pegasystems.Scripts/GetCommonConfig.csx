@@ -12,17 +12,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ExtCS.Debugger;
 
-///
-/// Script Code
-///
+var debugger = Debugger.GetCurrentDebugger();
+var sos = new Extension(@"C:\Windows\Microsoft.NET\Framework\v4.0.30319\sos.dll");
+var netext = new Extension("netext.dll");
 
-Debugger debugger = Debugger.GetCurrentDebugger();
-
-// Load extensions
-Extension sos = new Extension(@"C:\Windows\Microsoft.NET\Framework\v4.0.30319\sos.dll");
-Extension netext = new Extension("netext.dll");
-
-// Execute windbg command for !dumpheap
 string output = sos.CallExtensionMethod("dumpheap", "-stat -type OpenSpan.Configuration.ConfigManifestHelper -short");
 
 // Parse the output
@@ -37,19 +30,10 @@ foreach (Match match in matches)
 	break; // CommonConfig is always the first address. We can break out here.
 }
 
-// Calculate the first pointer!
 string manifestOffset = "4";
-
-UInt64 dereferencedAddress = debugger.POI(address, manifestOffset);
-string addressToManifest = dereferencedAddress.ToString("X");
-debugger.Output($"{Environment.NewLine} address dereferenced to -> {addressToManifest}{Environment.NewLine}");
-
-// Calculate the second pointer!
 string manifestDocumentOffset = "10";
-
-dereferencedAddress = debugger.POI(addressToManifest, manifestDocumentOffset);
+UInt64 dereferencedAddress = debugger.POI(address, manifestOffset, manifestDocumentOffset);
 string addressToDocument = dereferencedAddress.ToString("X");
-debugger.Output($"{Environment.NewLine} address dereferenced to -> {addressToDocument}{Environment.NewLine}");
 
 // Execute !wxml {address}
 string document = netext.CallExtensionMethod("wxml", addressToDocument);
