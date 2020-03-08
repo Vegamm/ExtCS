@@ -305,6 +305,44 @@ namespace ExtCS.Debugger
 			return ReadPointer(address + offs);
 		}
 
+		// Roslyn doesn't like the 'params' keyword and fails to compile scripts that use a method with it.
+		// Since that's the case, we've just created this overloaded method even though it's ugly...
+		// TODO: investigate how we can get methods with params to work in scripts.
+		public UInt64 POI(string address, string offset1, string offset2, string offset3 = "")
+		{
+			UInt64 addr = 0;
+			string[] offsets;
+
+			if (String.IsNullOrEmpty(offset3))
+			{
+				offsets = new[] { offset1, offset2 };
+			}
+			else
+			{
+				offsets = new[] { offset1, offset2, offset3 };
+			}
+
+			foreach (string offset in offsets)
+			{
+				addr = POI(address, offset);
+				address = addr.ToString("X");
+			}
+
+			return addr;
+		}
+
+		public UInt64 POI(string address, string[] offsets)
+		{
+			UInt64 addr = 0;
+			foreach (string offset in offsets)
+			{
+				addr = POI(address, offset);
+				address = addr.ToString("X");
+			}
+
+			return addr;
+		}
+
 		/// <summary>
 		/// Used to determine whether the debug target has a 64-bit pointer size
 		/// </summary>
