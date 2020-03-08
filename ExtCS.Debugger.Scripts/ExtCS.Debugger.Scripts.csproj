@@ -65,5 +65,8 @@
   <ItemGroup>
     <None Include="Pegasystems.Scripts\FindAddressWithType.csx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Pegasystems.Scripts\GetAdapterProperties.csx" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
