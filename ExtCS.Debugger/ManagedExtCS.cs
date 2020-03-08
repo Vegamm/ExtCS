@@ -223,6 +223,14 @@ namespace ExtCS.Debugger
 						context.ScriptLocation = Path.GetDirectoryName(mParsedPath);
 						useExistingSession = true;
 					}
+					else if (arguments.HasArgument("-f"))
+					{
+						mIsScript = false;
+						mParsedPath = arguments["-f"];
+						context.Args = arguments;
+						context.ScriptLocation = Path.GetDirectoryName(mParsedPath);
+						useExistingSession = true;
+					}
 					else if (arguments.HasArgument("-debug"))
 					{
 						mIsDebugMode = !mIsDebugMode;
