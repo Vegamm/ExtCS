@@ -113,7 +113,7 @@ namespace ExtCS.Debugger
 					}
 
 					return mValue;
-				}     
+				}
 				catch (Exception ex)
 				{
 					Debugger.GetCurrentDebugger().OutputDebugInfo("Could not read field '{0}' of CLRObject with type:{1} and MT {2}", Name, Type, MT);
@@ -124,44 +124,44 @@ namespace ExtCS.Debugger
 			}
 		}
 
-        public CLRObject this[string fieldName]
-        {
-            get
-            {
-                Debugger debugger = Debugger.GetCurrentDebugger();
-                try
-                {
-                    if (IsValueType)
-                    {
-                        throw new Exception($"value type {Name} does not support field access");
-                    }
-                    debugger.OutputDebugInfo($"Beginning to read field of CLRObject's {Name} fieldname {fieldName}\n");
-                    fieldName = fieldName.ToUpperInvariant();
-                    if (mFields != null && mFields.ContainsKey(fieldName))
-                    {
-                        return mFields[fieldName];
-                    }
-                    else
-                    {
-                        Init();
-                        InitFields();
-                        return mFields[fieldName];
-                    }
-                }
-                catch (Exception ex)
-                {
-                    debugger.OutputDebugInfo($"Error:Could not find a field '{fieldName}' for CLRObject with Name {Name} and Type{Type}\n");
-                    debugger.OutputDebugInfo(ex.Message);
-                    throw ex;
-                }
-            }
-        }
-        
-        #endregion
+		public CLRObject this[string fieldName]
+		{
+			get
+			{
+				Debugger debugger = Debugger.GetCurrentDebugger();
+				try
+				{
+					if (IsValueType)
+					{
+						throw new Exception($"value type {Name} does not support field access");
+					}
+					debugger.OutputDebugInfo($"Beginning to read field of CLRObject's {Name} fieldname {fieldName}\n");
+					fieldName = fieldName.ToUpperInvariant();
+					if (mFields != null && mFields.ContainsKey(fieldName))
+					{
+						return mFields[fieldName];
+					}
+					else
+					{
+						Init();
+						InitFields();
+						return mFields[fieldName];
+					}
+				}
+				catch (Exception ex)
+				{
+					debugger.OutputDebugInfo($"Error:Could not find a field '{fieldName}' for CLRObject with Name {Name} and Type{Type}\n");
+					debugger.OutputDebugInfo(ex.Message);
+					throw ex;
+				}
+			}
+		}
 
-        #region Constructors
+		#endregion
 
-        public CLRObject(bool isValueType, string typeName, object value)
+		#region Constructors
+
+		public CLRObject(bool isValueType, string typeName, object value)
 		{
 			this.IsValueType = isValueType;
 			Name = typeName;
@@ -173,7 +173,7 @@ namespace ExtCS.Debugger
 		/// <summary>
 		/// This constuctor is used as a lazy initialization technique.
 		/// we will not be reading the original address until a request comes 
-        /// for any field access.
+		/// for any field access.
 		/// </summary>
 		/// <param name="isPointer"></param>
 		/// <param name="offset"></param>
@@ -226,7 +226,7 @@ namespace ExtCS.Debugger
 
 		private void InitIfPointer()
 		{
-            Debugger debugger = Debugger.GetCurrentDebugger();
+			Debugger debugger = Debugger.GetCurrentDebugger();
 			if (mIsPointer)
 			{
 				debugger.OutputDebugInfo("Reading pointer of CLRObject's {2} with name: {1} and offset:{0}\n", mOffset, Type, Name);
@@ -245,10 +245,10 @@ namespace ExtCS.Debugger
 
 			mFields = new Dictionary<string, CLRObject>(mProperties.Length);
 
-            // chose to do string split instead of regular expressions.
-            // this may be faster than regular expressions.
-            // regular expression has a lot of edge cases when it comes to matching generic's
-            // notation containing special charcters
+			// chose to do string split instead of regular expressions.
+			// this may be faster than regular expressions.
+			// regular expression has a lot of edge cases when it comes to matching generic's
+			// notation containing special charcters
 
 			//name can be populated from the field property. so this is not necessary.
 			if (string.IsNullOrEmpty(Name) && mProperties[0].Contains("Name:"))
@@ -313,19 +313,19 @@ namespace ExtCS.Debugger
 						Debugger.GetCurrentDebugger().OutputDebugInfo("{0} \t\t {1} \t\t {2} \t\t {3} \n", ObjCLR.MT, ObjCLR.Type, ObjCLR.IsValueType, ObjCLR.Name);
 						mFields.Add(arrFields[arrFields.Length - 1].Trim().ToUpperInvariant(), ObjCLR);
 					}
-				}  
+				}
 			}
 		}
 
 		private void EmitParentInfo()
 		{
-            Debugger debugger = Debugger.GetCurrentDebugger();
-            if (this.Parent != null)
+			Debugger debugger = Debugger.GetCurrentDebugger();
+			if (this.Parent != null)
 			{
-                debugger.OutputDebugInfo("Parent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Name, this.Parent.Type, this.Parent.MT);
+				debugger.OutputDebugInfo("Parent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Name, this.Parent.Type, this.Parent.MT);
 				if (this.Parent.Parent != null)
 				{
-                    debugger.OutputDebugInfo("GrandParent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Parent.Name, this.Parent.Parent.Type, this.Parent.Parent.MT);
+					debugger.OutputDebugInfo("GrandParent CLRObject's  Name:{0} Type:{1} MT:{2}\n", this.Parent.Parent.Name, this.Parent.Parent.Type, this.Parent.Parent.MT);
 				}
 			}
 		}
