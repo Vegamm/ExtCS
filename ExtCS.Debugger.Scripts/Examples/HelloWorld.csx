@@ -1,0 +1,1 @@
+﻿Debugger.GetCurrentDebugger().Output("Hello World!");
