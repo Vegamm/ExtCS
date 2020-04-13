@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace ExtCS
@@ -36,6 +37,8 @@ namespace ExtCS
 					return mArgsList[argName.ToUpperInvariant()];
 				}
 			}
+
+			private set { mArgsList[argName.ToUpperInvariant()] = value; }
 		}
 
 		public IDictionary<string, string> ArgsCollection
@@ -91,6 +94,36 @@ namespace ExtCS
 				string key = item.Groups["argname"].Value.Trim().ToUpperInvariant();
 				string value = item.Groups["argvalue"].Value.Trim();
 				mArgsList.Add(key, value);
+			}
+
+			AddFileExtensionIfNecessary();
+		}
+
+		/// <summary>
+		/// Adds ".csx" to the file path if it was not was included with
+		/// the argument for '-f' or '-file'.
+		/// </summary>
+		private void AddFileExtensionIfNecessary()
+		{
+			string fileArg;
+			if (this.HasArgument("-file"))
+			{
+				fileArg = "-file";
+			}
+			else if (this.HasArgument("-f"))
+			{
+				fileArg = "-f";
+			}
+			else
+			{
+				return;
+			}
+
+			string filePath = this[fileArg];
+			if (Path.HasExtension(filePath) == false)
+			{
+				filePath = Path.ChangeExtension(filePath, "csx");
+				this[fileArg] = filePath;
 			}
 		}
 

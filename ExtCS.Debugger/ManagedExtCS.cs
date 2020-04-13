@@ -11,6 +11,7 @@ namespace ExtCS.Debugger
 {
 	public class ManagedExtCS
 	{
+
 		#region Fields
 
 		private static ManagedExtCS mManagedExtensionHost;
@@ -59,6 +60,9 @@ namespace ExtCS.Debugger
 
 		#region Public Static Methods
 
+		// Not sure what this would be used for since there is no way for us to access the
+		// debug client here.
+		// This does not work because the debugControl does not exist.
 		public static string Execute(string args)
 		{
 			return Execute(args, null);
@@ -192,17 +196,11 @@ namespace ExtCS.Debugger
 
 			if (debugClient != null && CSDebugger == null)
 			{
-				// Whats the purpose of creating a client here if it is already provided as a parameter?
-				//IDebugClient client;
-				//debugClient.CreateClient(out client);
 				ManagedDebugClient = debugClient;
 				CSDebugger = new Debugger(debugClient, debugControl, debugDataSpaces);
 			}
 
 			bool useExistingSession = true;
-
-			//CSDebugger.OutputLine("starting {0} ", "Execute");
-
 			Output = string.Empty;
 
 			// TODO: separate each case into its own method.
@@ -215,10 +213,20 @@ namespace ExtCS.Debugger
 					ScriptContext context = new ScriptContext();
 					Debugger.GetCurrentDebugger().Context = context;
 					context.Debug = mIsDebugMode;
+					
+					// TODO: Add shorter file argument option for -f
 					if (arguments.HasArgument("-file"))
 					{
 						mIsScript = false;
 						mParsedPath = arguments["-file"];
+						context.Args = arguments;
+						context.ScriptLocation = Path.GetDirectoryName(mParsedPath);
+						useExistingSession = true;
+					}
+					else if (arguments.HasArgument("-f"))
+					{
+						mIsScript = false;
+						mParsedPath = arguments["-f"];
 						context.Args = arguments;
 						context.ScriptLocation = Path.GetDirectoryName(mParsedPath);
 						useExistingSession = true;
@@ -271,19 +279,17 @@ namespace ExtCS.Debugger
 			catch (Exception ex)
 			{
 				Session = null;
-				CSDebugger.OutputError("\n\nException while executing the script {0}", ex.Message);
-				CSDebugger.OutputDebugInfo("\n Details: {0} \n", ex.ToString());
+				CSDebugger.OutputError($"\n\nException while executing the script {ex.Message}");
+				CSDebugger.OutputDebugInfo($"\n Details: {ex} \n");
 			}
 
-			//CSDebugger.Output("ending Execute");
-
-			CSDebugger.Output(Output);
-			CSDebugger.Output("\n");
+			CSDebugger.Output(Output + Environment.NewLine);
 			Output = string.Empty;
 
 			// What exactly are we returning here? -mv
 			return Output;
 		}
+
 		#endregion
 
 		#region Private Static Methods

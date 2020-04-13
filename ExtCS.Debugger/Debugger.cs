@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using DotNetDbg;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
+
+using DotNetDbg;
 
 namespace ExtCS.Debugger
 {
@@ -12,13 +14,12 @@ namespace ExtCS.Debugger
 	{
 		#region Fields
 
-		const int S_OK = 0;
 		const int E_FAIL = unchecked((int)0x80004005);
 		const int ERROR_INVALID_PARAMETER = unchecked((int)0x80070057);
 
 		private static Debugger sCurrent;
 		private static OutputHandler sOutHandler;
-		private static Dictionary<string, UInt64> sLoadedExtensions = new Dictionary<string, ulong>(10);
+		private static Dictionary<string, Extension> sLoadedExtensions = new Dictionary<string, Extension>(10);
 
 		StringBuilder mDebugOutput = new StringBuilder(10);
 
@@ -49,6 +50,8 @@ namespace ExtCS.Debugger
 			DebugControl = debugControl;
 			DebugDataSpaces = debugDataSpaces;
 			sCurrent = this;
+
+			Extension.ExtensionLoadedEvent += OnExtensionLoaded;
 		}
 
 		public Debugger(IDebugClient debugClient, ScriptContext context)
@@ -106,9 +109,9 @@ namespace ExtCS.Debugger
 			set
 			{
 				mFirstCommand = value;
-				mOutCtl = (mFirstCommand == false) ? 
-					DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.NOT_LOGGED : 
-					DEBUG_OUTCTL.THIS_CLIENT;
+				mOutCtl = (mFirstCommand == false) ?
+						DEBUG_OUTCTL.THIS_CLIENT | DEBUG_OUTCTL.NOT_LOGGED :
+						DEBUG_OUTCTL.THIS_CLIENT;
 			}
 		}
 
@@ -225,6 +228,17 @@ namespace ExtCS.Debugger
 			return GetUnicodeString(address, maxSize, out output);
 		}
 
+		public UInt64 POI(Address address)
+		{
+			UInt64 addr;
+			if (UInt64.TryParse(address.ToHex(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out addr))
+			{
+				return ReadPointer(addr);
+			}
+
+			throw new Exception($"Unable to convert address: {address}");
+		}
+
 		public UInt64 POI(string address)
 		{
 			UInt64 addr;
@@ -335,7 +349,7 @@ namespace ExtCS.Debugger
 		/// <returns>True if 64-bit, otherwise false</returns>
 		public bool IsPointer64Bit()
 		{
-			return (DebugControl.IsPointer64Bit() == S_OK);
+			return (DebugControl.IsPointer64Bit() == (int)HRESULT.S_OK);
 		}
 
 		/// <summary>
@@ -433,39 +447,44 @@ namespace ExtCS.Debugger
 			DebugClient.SetOutputCallbacks(ptrDebugOutputCallbacks2);
 		}
 
-		public bool Require(string extensionName)
-		{
-			extensionName = extensionName.ToLower().Trim();
-			
-			if (sLoadedExtensions.ContainsKey(extensionName))
-			{
-				return true;
-			}
-
-			UInt64 handle;
-			int hr = this.DebugControl.AddExtension(extensionName, 0, out handle);
-			if (hr != S_OK)
-			{
-				OutputError("unable to load extension {0}", extensionName);
-				return false;
-			}
-
-			sLoadedExtensions.Add(extensionName, handle);
-			OutputDebugInfo("loaded extension {0} \n", extensionName);
-			return true;
-		}
-
 		public void OutputError(string p, params object[] args)
 		{
 			string formatted = String.Format(p, args);
 			OutputHelper(formatted, DEBUG_OUTPUT.ERROR);
 		}
 
+		/// <summary>
+		/// Tries to load an extension. 
+		/// </summary>
+		/// <remarks>This is equivalent to instantiating a new Extension object</remarks>
+		/// <param name="extensionFilePath"></param>
+		/// <returns>True if extension is successfully loaded, false otherwise</returns>
+		public bool Require(string extensionFilePath)
+		{
+			if (extensionFilePath == null)
+			{
+				throw new ArgumentNullException("Extension file path cannot be null.");
+			}
+
+			extensionFilePath = extensionFilePath.ToLowerInvariant();
+			string extensionName = Path.GetFileNameWithoutExtension(extensionFilePath);
+			if (sLoadedExtensions.ContainsKey(extensionName))
+			{
+				return true;
+			}
+
+			Extension extension = new Extension(extensionFilePath);
+			return true;
+		}
+
+		/// <summary>
+		/// Sets the output callbacks to the previous callbacks.
+		/// </summary>
+		/// <param name="ptrPreviousCallbacks"></param>
+		/// <returns></returns>
 		public int RevertCallBacks(IntPtr ptrPreviousCallbacks)
 		{
 			this.DebugClient.FlushCallbacks();
-			
-			// Sets the output callbacks to the previous callbacks.
 			var hrInstallation = this.DebugClient.SetOutputCallbacks(ptrPreviousCallbacks);
 			return hrInstallation;
 		}
@@ -518,13 +537,7 @@ namespace ExtCS.Debugger
 		// TODO: Switch parameter order so that it matches with the native call.
 		private int OutputHelper(string formattedString, DEBUG_OUTPUT outputType)
 		{
-
-			//formattedString = EscapePercents(formattedString);
-			//mDebugOutput.Append(formattedString);
-
-			//return DebugControl.Output(outputType, formattedString);
 			return DebugControl.ControlledOutput(DEBUG_OUTCTL.ALL_OTHER_CLIENTS | DEBUG_OUTCTL.DML, outputType, formattedString);
-			//return DebugControl.ControlledOutputWide(mOutCtl, outputType, formattedString);
 		}
 
 		private void OutputVerboseLine(string p)
@@ -569,24 +582,26 @@ namespace ExtCS.Debugger
 
 		#region Internal Methods
 
-		internal UInt64 GetExtensionHandle(string extensionName)
+		/// <summary>
+		/// If the extension is loaded in the debugger, the Extension is returned.
+		/// Otherwise, null is returned.
+		/// </summary>
+		/// <param name="extensionName">The name of the extension to retrieve</param>
+		internal Extension GetExtension(string extensionName)
 		{
-			extensionName = extensionName.Trim().ToLower();
+			extensionName = extensionName.ToLowerInvariant();
+			extensionName = Path.GetFileNameWithoutExtension(extensionName);
 			if (sLoadedExtensions.ContainsKey(extensionName))
 			{
 				return sLoadedExtensions[extensionName];
 			}
-			else
-			{
-				Require(extensionName);
-				return sLoadedExtensions[extensionName];
-			}
+			return null;
 		}
 
-		// TODO: Implement OutputError.
-		internal void OutputError(string p, string method, string args)
+		internal void OutputError(string message, string method, string args)
 		{
-			throw new NotImplementedException();
+			string formatted = $"Error | [{method} {args}] : {message}";
+			OutputHelper(formatted, DEBUG_OUTPUT.ERROR);
 		}
 
 		/// <summary>
@@ -600,6 +615,26 @@ namespace ExtCS.Debugger
 			throw new Exception(String.Format("Error in {0}: {1}", stackFrame.GetMethod().Name, hr));
 		}
 
-		#endregion 
+		#endregion
+
+		#region Event Handlers
+
+		private void OnExtensionLoaded(Extension extension, Extension.ExtensionLoadedEventArgs args)
+		{
+			string extensionFilePath = args?.ExtensionFilePath;
+			if (extensionFilePath is null)
+			{
+				return;
+			}
+
+			extensionFilePath = extensionFilePath.ToLowerInvariant();
+			string extensionName = Path.GetFileNameWithoutExtension(extensionFilePath);
+			if (sLoadedExtensions.ContainsKey(extensionName) == false)
+			{
+				sLoadedExtensions.Add(extensionName, extension);
+			}
+		}
+
+		#endregion
 	}
 }

@@ -1,21 +1,27 @@
 ﻿using System;
 using System.Dynamic;
 
+using DotNetDbg;
+
 namespace ExtCS.Debugger
 {
-   public class Extension : DynamicObject
-    {
+	public class Extension : DynamicObject
+	{
 
 		#region Fields
 
-		const int S_OK = 0;
 		private OutputHandler mOutputHandler = new OutputHandler();
 
 		#endregion
 
 		#region Constructors
 
-		public Extension(string extensionName)
+		/// <summary>
+		/// Gets an instance of the debugger and attempts to load the extension
+		/// from the provided path.
+		/// </summary>
+		/// <param name="extensionFilePath">Path to the extension.</param>
+		public Extension(string extensionFilePath)
 		{
 			ExtensionDebugger = Debugger.GetCurrentDebugger();
 
@@ -24,45 +30,57 @@ namespace ExtCS.Debugger
 				throw new Exception("No debugger available.");
 			}
 
-			ExtensionHandle = ExtensionDebugger.GetExtensionHandle(extensionName);
+			// TODO: This needs logic to check if the extensionHandle is an invalid address (meaning that the loading of the module failed because of a bad path). We could also intercept the outputhandler and check for certain output.
+
+			// If the extension has already been loaded,
+			// the existing extension handle is returned.
+			ulong extensionHandle;
+			int hr = ExtensionDebugger.DebugControl.AddExtensionWide(extensionFilePath, 0, out extensionHandle);
+			if (hr == (int)HRESULT.S_OK)
+			{
+				ExtensionHandle = extensionHandle;
+				Extension.ExtensionLoadedEvent(this, new ExtensionLoadedEventArgs(extensionFilePath));
+			}
+			else
+			{
+				throw new Exception($"Failed to load extension with path: {extensionFilePath}");
+			}
 		}
 
 		#endregion
 
 		#region Properties
 
-		public ulong ExtensionHandle { get; set; }
+		public ulong ExtensionHandle { get; private set; }
 
-		public unsafe Debugger ExtensionDebugger { get; set; }
+		public Debugger ExtensionDebugger { get; private set; }
 
 		#endregion
 
 		#region Public Methods
-
-		// This doesn't seem like a necessary method. Consider removing.
-		public string Call(string command, params string[] args)
-		{
-			//return CallExtensionMethod(commandname, CombineArgs(args));
-			return this.ExtensionDebugger.Execute(command + "" + CombineArgs(args));
-		}
 
 		public string CallExtensionMethod(string method, string args)
 		{
 			IntPtr ptrOriginalOutputHandler;
 			ExtensionDebugger.InstallCustomHandler(mOutputHandler, out ptrOriginalOutputHandler);
 
-			int hr = ExtensionDebugger.DebugControl.CallExtensionWide(ExtensionHandle, method, args);
-			if (hr != S_OK)
+			// The bang isn't needed to call extension methods but some people may
+			// add the input out of habit, so we will trim this off if it happens.
+			if (method.StartsWith("!"))
 			{
-				ExtensionDebugger.OutputError("unable to call extension method {0} with args {1}", method, args);
+				method = method.TrimStart('!');
+			}
+
+			int hr = ExtensionDebugger.DebugControl.CallExtensionWide(ExtensionHandle, method, args);
+			if (hr != (int)HRESULT.S_OK)
+			{
+				ExtensionDebugger.Output($"Unable to call extension method [{method}] with args [{args}]");
 				return null;
 			}
 
-			ExtensionDebugger.DebugClient.FlushCallbacks();
 			ExtensionDebugger.RevertCallBacks(ptrOriginalOutputHandler);
 
 			return mOutputHandler.ToString();
-
 		}
 
 		#endregion
@@ -114,6 +132,24 @@ namespace ExtCS.Debugger
 				return false;
 
 			return true;
+		}
+
+		#endregion
+
+		#region Events
+
+		public delegate void ExtensionLoaded(Extension extension, ExtensionLoadedEventArgs args);
+
+		public static event ExtensionLoaded ExtensionLoadedEvent;
+
+		public class ExtensionLoadedEventArgs : EventArgs
+		{
+			public ExtensionLoadedEventArgs(string extensionFilePath)
+			{
+				ExtensionFilePath = extensionFilePath;
+			}
+
+			public string ExtensionFilePath { get; }
 		}
 
 		#endregion

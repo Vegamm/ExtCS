@@ -1,11 +1,11 @@
-/// Contents of sosheap.csx
-using ExtCS.Debugger;
+// Contents of sosheap.csx
 
-// Get an instance of the debugger.
+
+// Get the instance of the Debugger.
 var debugger = Debugger.GetCurrentDebugger();
 
-// Load sos
-var sos = new Extension("C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\sos.dll");
+// We must use the absolute path to load sos.
+var sos = new Extension(@"C:\Windows\Microsoft.NET\Framework\v4.0.30319\sos.dll");
 
-// Call '!dumpheap -stat' on sos
+// Call the extension method: !dumpheap -stat
 sos.CallExtensionMethod("dumpheap", "-stat");

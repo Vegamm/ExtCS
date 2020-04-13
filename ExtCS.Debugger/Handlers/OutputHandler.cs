@@ -9,9 +9,6 @@ namespace ExtCS.Debugger
 
 		#region Fields
 
-		//this should probably be a centralize property (along the the fail/succeed methods) -mv
-		const int S_OK = 0;
-
 		//why public... -mv
 		public StringBuilder mStbOutput = new StringBuilder();
 
@@ -42,7 +39,7 @@ namespace ExtCS.Debugger
 		public int GetInterestMask(out DEBUG_OUTCBI Mask)
 		{
 			Mask = INTEREST_MASK;
-			return S_OK;
+			return (int)HRESULT.S_OK;
 		}
 
 		/// <summary>
@@ -55,18 +52,18 @@ namespace ExtCS.Debugger
 			if (Which == DEBUG_OUTCB.EXPLICIT_FLUSH)
 			{
 				//Flush();
-				return S_OK;
-			}
+				return (int)HRESULT.S_OK;
+            }
 			else if ((Text == null) || (Text.Length == 0))
 			{
-				return S_OK;
-			}
+				return (int)HRESULT.S_OK;
+            }
 			bool textIsDml = (Which == DEBUG_OUTCB.DML);
 
 			mStbOutput.Append(Text);
 
-			return S_OK;
-		}
+			return (int)HRESULT.S_OK;
+        }
 
 		int IDebugOutputCallbacks.Output(DEBUG_OUTPUT Mask, string Text)
 		{

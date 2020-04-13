@@ -105,13 +105,10 @@ namespace ExtCS.Debugger
 				}
 				catch (Exception executeException)
 				{
-					Debugger.GetCurrentDebugger().OutputDebugInfo("An error occurred when executing the scripts.");
-					var message =
-							string.Format(
-							"Exception Message: {0} {1}Stack Trace:{2}",
-							executeException.InnerException.Message,
-							Environment.NewLine,
-							executeException.InnerException.StackTrace);
+					var message = $"Exception Message: {executeException.InnerException?.Message}\nStack Trace:{executeException.InnerException?.StackTrace}";
+					Debugger.GetCurrentDebugger().OutputDebugInfo("An error occurred when executing the scripts.\n");
+					Debugger.GetCurrentDebugger().OutputDebugInfo(message);
+					
 					// AppDomain.Unload(mDebuggerDomain);
 					mDebuggerDomain = null;
 					throw executeException;
