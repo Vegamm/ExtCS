@@ -53,20 +53,12 @@
     <None Include="Examples\aspxpages.csx" />
     <None Include="Examples\aspxrequests.csx" />
     <None Include="Examples\base.csx" />
-    <None Include="Examples\Copy of showerrors.csx" />
     <None Include="Examples\DecompileStack.csx" />
-    <None Include="Pegasystems.Scripts\GetCommonConfig.csx" />
     <None Include="Examples\highCPURequests.csx" />
     <None Include="Examples\HighCPUThreads.csx" />
     <None Include="Examples\requests.csx" />
     <None Include="Examples\showerrors.csx" />
     <None Include="Examples\sosheap.csx" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Pegasystems.Scripts\FindAddressWithType.csx" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Pegasystems.Scripts\GetAdapterProperties.csx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
